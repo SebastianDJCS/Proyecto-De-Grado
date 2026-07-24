@@ -13,7 +13,13 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise ValueError("Error: La variable DATABASE_URL no está configurada en .env")
 
-engine = create_engine(DATABASE_URL)
+# Se agregan pool_pre_ping y pool_recycle para evitar "SSL connection has been closed unexpectedly"
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,  # Verifica la conexión antes de usarla
+    pool_recycle=300     # Recicla conexiones cada 5 minutos
+)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db():

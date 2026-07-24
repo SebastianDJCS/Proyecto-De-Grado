@@ -34,19 +34,26 @@ class DisponibilidadDocente(Base):
 
 	docente: Mapped[Docente] = relationship(back_populates="disponibilidades")
 
-
 class Salon(Base):
-	__tablename__ = "salones"
+    __tablename__ = "salones"
 
-	id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-	bloque: Mapped[str] = mapped_column(String(50), nullable=False)
-	nomenclatura: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
-	capacidad: Mapped[int] = mapped_column(Integer, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    bloque: Mapped[str] = mapped_column(String(50), nullable=False)
+    nomenclatura: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    nombre: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    tipo: Mapped[str] = mapped_column(String(30), nullable=False, server_default="AULA")
+    capacidad: Mapped[int] = mapped_column(Integer, nullable=False)
 
-	horarios_optimizados: Mapped[list["HorarioOptimizado"]] = relationship(
-		back_populates="salon",
-		cascade="all, delete-orphan",
-	)
+    horarios_optimizados: Mapped[list["HorarioOptimizado"]] = relationship(
+        back_populates="salon",
+        cascade="all, delete-orphan",
+    )
+
+    @property
+    def etiqueta_visual(self) -> str:
+        if self.nombre:
+            return f"{self.tipo.capitalize()} {self.nombre} ({self.nomenclatura})"
+        return f"Aula {self.nomenclatura} - Bloque {self.bloque}"
 
 
 class Asignatura(Base):

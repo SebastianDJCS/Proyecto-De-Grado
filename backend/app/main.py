@@ -9,7 +9,7 @@ Configura:
 """
 
 import logging
-
+from app.api.endpoints import horarios, solver, upload
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -80,3 +80,5 @@ if __name__ == "__main__":
         reload=True,
         log_level="info",
     )
+
+app.include_router(horarios.router, prefix="/api")
