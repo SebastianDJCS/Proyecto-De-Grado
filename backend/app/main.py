@@ -47,7 +47,7 @@ app.add_middleware(
 )
 
 # Routers
-app.include_router(solver.router, prefix="/api", tags=["Optimización"])
+app.include_router(solver.router, prefix="/api")
 if upload.router:  # Si existe el router de upload
     app.include_router(upload.router, prefix="/api", tags=["Carga de Datos"])
 
@@ -68,13 +68,13 @@ def health_check():
     """Verificar estado de la aplicación."""
     return {"status": "healthy"}
 
-
 if __name__ == "__main__":
     import uvicorn
 
     logger.info("Iniciando servidor FastAPI...")
+    # Cambiamos 'app' por el string '"app.main:app"'
     uvicorn.run(
-        app,
+        "app.main:app",
         host="0.0.0.0",
         port=8000,
         reload=True,

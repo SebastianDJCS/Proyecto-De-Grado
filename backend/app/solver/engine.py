@@ -26,8 +26,9 @@ from app.models import (
 
 logger = logging.getLogger(__name__)
 
+from pydantic import BaseModel
 
-class ResultadoOptimizacion(NamedTuple):
+class ResultadoOptimizacion(BaseModel):
     """Resultado de la optimización de horarios."""
 
     status: str

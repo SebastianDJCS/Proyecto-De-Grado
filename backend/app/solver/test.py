@@ -7,7 +7,10 @@ sin necesidad de ejecutar la aplicación FastAPI completa.
 Uso:
     python -m app.solver.test
 """
+from app.database import Base, engine
 
+# Forzar la creación de todas las tablas si no existen
+Base.metadata.create_all(bind=engine)
 import logging
 from datetime import datetime
 
