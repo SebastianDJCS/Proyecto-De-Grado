@@ -5,24 +5,24 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 class Base(DeclarativeBase):
 	pass
 
-
 class Docente(Base):
-	__tablename__ = "docentes"
+    __tablename__ = "docentes"
 
-	id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-	documento: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
-	nombre: Mapped[str] = mapped_column(String(255), nullable=False)
-	horas_maximas: Mapped[int] = mapped_column(Integer, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    documento: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    nombre: Mapped[str] = mapped_column(String(255), nullable=False)
+    horas_maximas: Mapped[int] = mapped_column(Integer, nullable=False)
+    # ➕ Agregamos horas administrativas con valor por defecto en 0
+    horas_administrativas: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
-	disponibilidades: Mapped[list["DisponibilidadDocente"]] = relationship(
-		back_populates="docente",
-		cascade="all, delete-orphan",
-	)
-	horarios_optimizados: Mapped[list["HorarioOptimizado"]] = relationship(
-		back_populates="docente",
-		cascade="all, delete-orphan",
-	)
-
+    disponibilidades: Mapped[list["DisponibilidadDocente"]] = relationship(
+        back_populates="docente",
+        cascade="all, delete-orphan",
+    )
+    horarios_optimizados: Mapped[list["HorarioOptimizado"]] = relationship(
+        back_populates="docente",
+        cascade="all, delete-orphan",
+    )
 
 class DisponibilidadDocente(Base):
 	__tablename__ = "disponibilidades_docentes"
@@ -53,7 +53,7 @@ class Salon(Base):
     def etiqueta_visual(self) -> str:
         if self.nombre:
             return f"{self.tipo.capitalize()} {self.nombre} ({self.nomenclatura})"
-        return f"Aula {self.nomenclatura} - Bloque {self.bloque}"
+        return f"Aula {self.nomenclatura} - Bloque {self.sede}"
 
 
 class Asignatura(Base):
@@ -102,6 +102,7 @@ class HorarioOptimizado(Base):
 	salon_id: Mapped[int] = mapped_column(ForeignKey("salones.id", ondelete="CASCADE"), nullable=False, index=True)
 	dia: Mapped[str] = mapped_column(String(20), nullable=False)
 	bloque_horario: Mapped[str] = mapped_column(String(20), nullable=False)
+	tipo_actividad: Mapped[str] = mapped_column(String(20), nullable=False, default="CLASE")
 	fecha_generacion: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
 	grupo_proyectado: Mapped[GrupoProyectado] = relationship(back_populates="horarios_optimizados")

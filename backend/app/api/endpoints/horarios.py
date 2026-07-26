@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import HorarioOptimizado
+from app.models import HorarioOptimizado, Docente
 
 logger = logging.getLogger(__name__)
 
@@ -16,12 +16,13 @@ router = APIRouter(prefix="/horarios", tags=["Horarios"])
 
 class HorarioDetalleSchema(BaseModel):
     id: int
-    grupo_id: int
+    tipo_actividad: str = "CLASE"
+    grupo_id: Optional[int] = None
     asignatura: str
     grupo_codigo: str
     docente_id: int
     docente_nombre: str
-    salon_id: int
+    salon_id: Optional[int] = None
     salon_nombre: Optional[str] = None
     dia: str
     bloque_horario: str
@@ -35,20 +36,27 @@ class HorarioDetalleSchema(BaseModel):
 def _mapear_horario(h: HorarioOptimizado) -> HorarioDetalleSchema:
     """Mapea una entidad HorarioOptimizado a su schema DTO de respuesta."""
     
-    # 1. Determinar el nombre/etiqueta del salón (fallback a nomenclatura si nombre es None)
-    nombre_salon = "N/A"
+    # 1. Determinar el nombre/etiqueta del salón
+    nombre_salon = "N/A / Oficina"
     if h.salon:
         nombre_salon = h.salon.nombre or h.salon.nomenclatura
 
-    # 2. Determinar el código del grupo
+    # 2. Determinar el código del grupo y la asignatura
     codigo_grupo = "N/A"
-    if h.grupo_proyectado and h.grupo_proyectado.numero_grupo is not None:
-        codigo_grupo = str(h.grupo_proyectado.numero_grupo)
+    tipo_act = getattr(h, "tipo_actividad", "CLASE")
+    nombre_asignatura = "Labor Administrativa" if tipo_act == "ADMINISTRATIVA" else "N/A"
+
+    if h.grupo_proyectado:
+        if h.grupo_proyectado.numero_grupo is not None:
+            codigo_grupo = str(h.grupo_proyectado.numero_grupo)
+        if h.grupo_proyectado.asignatura:
+            nombre_asignatura = h.grupo_proyectado.asignatura.nombre
 
     return HorarioDetalleSchema(
         id=h.id,
+        tipo_actividad=tipo_act,
         grupo_id=h.grupo_proyectado_id,
-        asignatura=h.grupo_proyectado.asignatura.nombre if h.grupo_proyectado and h.grupo_proyectado.asignatura else "N/A",
+        asignatura=nombre_asignatura,
         grupo_codigo=codigo_grupo,
         docente_id=h.docente_id,
         docente_nombre=h.docente.nombre if h.docente else "N/A",
@@ -92,10 +100,31 @@ def obtener_horario_por_docente(
     docente_id: int,
     db: Session = Depends(get_db),
 ):
-    """Obtiene la malla horaria asignada a un docente específico."""
+    """Obtiene la malla horaria asignada a un docente por su ID interno."""
     horarios = (
         db.query(HorarioOptimizado)
         .filter(HorarioOptimizado.docente_id == docente_id)
+        .all()
+    )
+    return [_mapear_horario(h) for h in horarios]
+
+
+@router.get("/docente/identificacion/{documento}", response_model=List[HorarioDetalleSchema])
+def obtener_horario_por_documento_docente(
+    documento: str,
+    db: Session = Depends(get_db),
+):
+    """Obtiene la malla horaria completa buscando por número de documento de identidad del docente."""
+    docente = db.query(Docente).filter(Docente.documento == documento).first()
+    if not docente:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Docente no encontrado con ese número de documento"
+        )
+
+    horarios = (
+        db.query(HorarioOptimizado)
+        .filter(HorarioOptimizado.docente_id == docente.id)
         .all()
     )
     return [_mapear_horario(h) for h in horarios]
