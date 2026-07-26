@@ -1,39 +1,13 @@
-from typing import List, Optional
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Salon  # Ajusta si en tu models.py la clase se llama diferente
+from app.models import Salon
+from app.schemas import SalonCreate, SalonResponse, SalonUpdate
 
 router = APIRouter(prefix="/salones", tags=["Salones"])
 
-
-# --- Schemas de Pydantic ---
-
-class SalonBase(BaseModel):
-    nomenclatura: str
-    nombre: Optional[str] = None
-    capacidad: int
-    es_laboratorio: bool = False
-
-class SalonCreate(SalonBase):
-    pass
-
-class SalonUpdate(BaseModel):
-    nomenclatura: Optional[str] = None
-    nombre: Optional[str] = None
-    capacidad: Optional[int] = None
-    es_laboratorio: Optional[bool] = None
-
-class SalonResponse(SalonBase):
-    id: int
-
-    class Config:
-        from_attributes = True
-
-
-# --- Endpoints CRUD ---
 
 @router.get("/", response_model=List[SalonResponse])
 def obtener_salones(

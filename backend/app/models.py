@@ -38,7 +38,7 @@ class Salon(Base):
     __tablename__ = "salones"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    bloque: Mapped[str] = mapped_column(String(50), nullable=False)
+    sede: Mapped[str] = mapped_column(String(50), nullable=False)
     nomenclatura: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     nombre: Mapped[str | None] = mapped_column(String(100), nullable=True)
     tipo: Mapped[str] = mapped_column(String(30), nullable=False, server_default="AULA")

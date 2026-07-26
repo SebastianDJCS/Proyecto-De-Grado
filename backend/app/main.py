@@ -14,7 +14,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.endpoints import horarios, solver, upload, salones, docentes, asignaturas, grupos
+from app.api.endpoints import horarios, solver, upload, salones, docentes, asignaturas, grupos, disponibilidades
 from app.database import Base, engine
 
 # Configurar logging
@@ -59,6 +59,7 @@ app.add_middleware(
 # Agrupación de Routers
 app.include_router(solver.router, prefix="/api")
 app.include_router(docentes.router, prefix="/api")
+app.include_router(disponibilidades.router, prefix="/api")
 app.include_router(asignaturas.router, prefix="/api")
 app.include_router(salones.router, prefix="/api")
 app.include_router(grupos.router, prefix="/api")
