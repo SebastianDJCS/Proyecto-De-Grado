@@ -66,9 +66,24 @@ def obtener_todos_los_horarios(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 100,
+    docente_id: Optional[int] = None,
+    grupo_id: Optional[int] = None,
+    salon_id: Optional[int] = None,
+    dia: Optional[str] = None,
 ):
-    """Obtiene la lista completa de horarios optimizados."""
-    horarios = db.query(HorarioOptimizado).offset(skip).limit(limit).all()
+    """Obtiene la lista completa de horarios optimizados con filtros opcionales."""
+    query = db.query(HorarioOptimizado)
+
+    if docente_id:
+        query = query.filter(HorarioOptimizado.docente_id == docente_id)
+    if grupo_id:
+        query = query.filter(HorarioOptimizado.grupo_proyectado_id == grupo_id)
+    if salon_id:
+        query = query.filter(HorarioOptimizado.salon_id == salon_id)
+    if dia:
+        query = query.filter(HorarioOptimizado.dia.ilike(f"%{dia}%"))
+
+    horarios = query.offset(skip).limit(limit).all()
     return [_mapear_horario(h) for h in horarios]
 
 
