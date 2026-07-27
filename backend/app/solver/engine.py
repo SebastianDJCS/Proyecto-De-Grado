@@ -27,7 +27,7 @@ from app.models import (
 
 logger = logging.getLogger(__name__)
 
-HORAS_POR_BLOQUE = 2  # Asumiendo bloques de 2 horas
+HORAS_POR_BLOQUE = 2  # Estándar alineado a tus bloques de 2 horas en la BD (ej. 08:00-10:00)
 
 
 class ResultadoOptimizacion(BaseModel):
@@ -57,18 +57,13 @@ def _extraer_datos_bd(db: Session, semestre: Optional[int] = None) -> DatosOptim
 
     query_grupos = db.query(GrupoProyectado)
     if semestre is not None:
-        # Asumiendo relación GrupoProyectado.asignatura
         query_grupos = query_grupos.filter(GrupoProyectado.asignatura.has(semestre=semestre))
     
     grupos = query_grupos.all()
-    if not grupos:
-        logger.warning("No hay grupos proyectados para los filtros aplicados en la BD")
-        return DatosOptimizacion([], [], [], {}, [])
-
     docentes = db.query(Docente).all()
     salones = db.query(Salon).all()
-
     disponibilidades_raw = db.query(DisponibilidadDocente).all()
+
     disponibilidades_map = {}
     bloques_set = set()
 
@@ -105,11 +100,7 @@ def _crear_variables_decision(
     salones: List[Salon],
     bloques_horarios: List[Tuple[str, str]],
 ) -> Tuple[Dict[Tuple[int, int, int, int], Any], Dict[Tuple[int, int], Any]]:
-    """
-    Crea las variables binarias:
-    - x[g, d, s, t]: Asignación de Clase
-    - y[d, t]: Asignación de Hora Administrativa
-    """
+    """Crea las variables binarias para clases y horas administrativas."""
     logger.info("Creando variables de decisión (Clases y Horas Administrativas)...")
 
     vars_clase = {}
@@ -138,7 +129,7 @@ def _agregar_restriccion_disponibilidad_docente(
     bloques_horarios: List[Tuple[str, str]],
     disponibilidades: Dict[int, set],
 ) -> None:
-    """Garantiza que el docente solo dé clases o haga horas administrativas si está disponible."""
+    """Garantiza que el docente solo actúe si está disponible."""
     for (g_idx, d_idx, s_idx, t_idx), var in vars_clase.items():
         docente = docentes[d_idx]
         bloque = bloques_horarios[t_idx]
@@ -159,7 +150,7 @@ def _agregar_restriccion_conflicto_docente(
     docentes: List[Docente],
     bloques_horarios: List[Tuple[str, str]],
 ) -> None:
-    """Un docente solo puede hacer 1 actividad a la vez (1 Clase OR 1 Hora Admin)."""
+    """Un docente solo puede hacer 1 actividad a la vez."""
     for d_idx, _ in enumerate(docentes):
         for t_idx, _ in enumerate(bloques_horarios):
             clases = [var for (g, d, s, t), var in vars_clase.items() if d == d_idx and t == t_idx]
@@ -177,14 +168,15 @@ def _agregar_restriccion_horas_docente(
     vars_admin: Dict[Tuple[int, int], Any],
     docentes: List[Docente],
 ) -> None:
-    """Controla la asignación de horas administrativas y el límite máximo de horas combinadas."""
+    """Controla la asignación exacta de horas administrativas y el límite máximo."""
     for d_idx, docente in enumerate(docentes):
-        # 1. Asignación exacta de horas administrativas requeridas
-        bloques_admin_req = getattr(docente, "horas_administrativas", 0) // HORAS_POR_BLOQUE
+        horas_admin_req = getattr(docente, "horas_administrativas", 0)
         admin_vars_docente = [var for (d, t), var in vars_admin.items() if d == d_idx]
 
-        if admin_vars_docente and bloques_admin_req > 0:
-            model.Add(sum(admin_vars_docente) == bloques_admin_req)
+        # 1. Asignación exacta de bloques administrativos basados en la BD de 2 horas
+        if admin_vars_docente and horas_admin_req > 0:
+            bloques_admin_necesarios = max(1, horas_admin_req // HORAS_POR_BLOQUE)
+            model.Add(sum(admin_vars_docente) == bloques_admin_necesarios)
         elif admin_vars_docente:
             model.Add(sum(admin_vars_docente) == 0)
 
@@ -195,13 +187,48 @@ def _agregar_restriccion_horas_docente(
         model.Add(sum(clase_vars_docente) + sum(admin_vars_docente) <= max_bloques_totales)
 
 
+def _agregar_funcion_objetivo_penalizacion(
+    model: cp_model.CpModel,
+    vars_clase: Dict[Tuple[int, int, int, int], Any],
+    vars_admin: Dict[Tuple[int, int], Any],
+    docentes: List[Docente],
+    bloques_horarios: List[Tuple[str, str]],
+) -> None:
+    """Penaliza la dispersión de las horas administrativas para mantenerlas agrupadas."""
+    logger.info("Configurando función objetivo y penalizaciones de horario...")
+    
+    penalizaciones = []
+    dias_unicos = sorted(list(set(dia for dia, _ in bloques_horarios)))
+
+    for d_idx, _ in enumerate(docentes):
+        dias_con_admin = []
+        for dia in dias_unicos:
+            bloques_dia = [
+                vars_admin[(d_idx, t_idx)] 
+                for t_idx, (b_dia, _) in enumerate(bloques_horarios) 
+                if b_dia == dia and (d_idx, t_idx) in vars_admin
+            ]
+            
+            if bloques_dia:
+                is_dia_activo = model.NewBoolVar(f"admin_dia_d{d_idx}_{dia}")
+                model.Add(sum(bloques_dia) >= 1).OnlyEnforceIf(is_dia_activo)
+                model.Add(sum(bloques_dia) == 0).OnlyEnforceIf(is_dia_activo.Not())
+                dias_con_admin.append(is_dia_activo)
+
+        if dias_con_admin:
+            penalizaciones.append(sum(dias_con_admin) * 10)
+
+    if penalizaciones:
+        model.Minimize(sum(penalizaciones))
+
+
 def _agregar_restriccion_no_cruce_semestres(
     model: cp_model.CpModel,
     vars_clase: Dict[Tuple[int, int, int, int], Any],
     grupos: List[GrupoProyectado],
     bloques_horarios: List[Tuple[str, str]],
 ) -> None:
-    """Evita que materias pertenecientes al mismo semestre se crucen a la misma hora."""
+    """Evita cruces de materias del mismo semestre."""
     semestres = {}
     for g_idx, grupo in enumerate(grupos):
         semestre = getattr(grupo.asignatura, "semestre", None)
@@ -260,7 +287,7 @@ def _resolver_modelo(
     vars_clase: Dict[Tuple[int, int, int, int], Any],
     vars_admin: Dict[Tuple[int, int], Any],
 ) -> Tuple[str, float, Dict[Tuple[int, int, int, int], bool], Dict[Tuple[int, int], bool]]:
-    """Resuelve el modelo CP-SAT y extrae resultados de clases y horas administrativas."""
+    """Resuelve el modelo CP-SAT."""
     logger.info("Iniciando resolución del modelo...")
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = 300
@@ -298,13 +325,12 @@ def _guardar_horarios_bd(
     salones: List[Salon],
     bloques_horarios: List[Tuple[str, str]],
 ) -> int:
-    """Guarda tanto clases como horas administrativas en la base de datos."""
+    """Guarda clases y horas administrativas en la base de datos."""
     logger.info("Guardando horarios optimizados en BD...")
     db.query(HorarioOptimizado).delete()
 
     contador = 0
 
-    # 1. Guardar Clases
     for (g_idx, d_idx, s_idx, t_idx), asignado in asignaciones_clase.items():
         if asignado:
             dia, bloque_horario = bloques_horarios[t_idx]
@@ -319,7 +345,6 @@ def _guardar_horarios_bd(
             db.add(horario)
             contador += 1
 
-    # 2. Guardar Horas Administrativas
     for (d_idx, t_idx), asignado in asignaciones_admin.items():
         if asignado:
             dia, bloque_horario = bloques_horarios[t_idx]
@@ -354,12 +379,10 @@ def resolver_horarios_uctp(db: Session, semestre: Optional[int] = None) -> Resul
 
         model = cp_model.CpModel()
 
-        # Crear variables
         vars_clase, vars_admin = _crear_variables_decision(
             model, datos.grupos, datos.docentes, datos.salones, datos.bloques_horarios
         )
 
-        # Aplicar restricciones
         _agregar_restriccion_capacidad_salon(model, vars_clase, datos.grupos, datos.salones)
         _agregar_restriccion_disponibilidad_docente(
             model, vars_clase, vars_admin, datos.docentes, datos.bloques_horarios, datos.disponibilidades
@@ -370,7 +393,8 @@ def resolver_horarios_uctp(db: Session, semestre: Optional[int] = None) -> Resul
         _agregar_restriccion_cobertura_grupos(model, vars_clase, datos.grupos)
         _agregar_restriccion_no_cruce_semestres(model, vars_clase, datos.grupos, datos.bloques_horarios)
 
-        # Resolver
+        _agregar_funcion_objetivo_penalizacion(model, vars_clase, vars_admin, datos.docentes, datos.bloques_horarios)
+
         status_str, elapsed_time, asig_clase, asig_admin = _resolver_modelo(model, vars_clase, vars_admin)
 
         total_asignaciones = 0
