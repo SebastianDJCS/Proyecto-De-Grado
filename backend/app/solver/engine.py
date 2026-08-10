@@ -51,15 +51,11 @@ class DatosOptimizacion(NamedTuple):
     bloques_horarios: List[Tuple[str, str]]  # lista de (dia, bloque_horario)
 
 
-def _extraer_datos_bd(db: Session, semestre: Optional[int] = None) -> DatosOptimizacion:
-    """Extrae de la BD los datos necesarios, permitiendo filtrar opcionalmente por semestre."""
-    logger.info("Extrayendo datos de la base de datos...")
+def _extraer_datos_bd(db: Session) -> DatosOptimizacion:
+    """Extrae de la BD todos los datos de forma global para la optimización."""
+    logger.info("Extrayendo datos globales de la base de datos...")
 
-    query_grupos = db.query(GrupoProyectado)
-    if semestre is not None:
-        query_grupos = query_grupos.filter(GrupoProyectado.asignatura.has(semestre=semestre))
-    
-    grupos = query_grupos.all()
+    grupos = db.query(GrupoProyectado).all()
     docentes = db.query(Docente).all()
     salones = db.query(Salon).all()
     disponibilidades_raw = db.query(DisponibilidadDocente).all()
@@ -364,10 +360,10 @@ def _guardar_horarios_bd(
     return contador
 
 
-def resolver_horarios_uctp(db: Session, semestre: Optional[int] = None) -> ResultadoOptimizacion:
-    """Punto de entrada principal orquestador del motor CP-SAT."""
+def resolver_horarios_uctp(db: Session) -> ResultadoOptimizacion:
+    """Punto de entrada principal orquestador del motor CP-SAT de forma global."""
     try:
-        datos = _extraer_datos_bd(db, semestre=semestre)
+        datos = _extraer_datos_bd(db)
 
         if not datos.grupos or not datos.docentes or not datos.salones or not datos.bloques_horarios:
             msg = "Datos insuficientes en la BD para ejecutar el motor"
