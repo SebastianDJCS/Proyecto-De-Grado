@@ -1,0 +1,60 @@
+.dock-outer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  overflow: visible;
+}
+
+.dock-panel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 1);
+  border-radius: 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+}
+
+.dock-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  background-color: #f3f4f6;
+  border-radius: 12px;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.2s;
+}
+
+.dock-item:hover {
+  background-color: #ffedd5; /* Tono naranja suave acorde a tu app */
+}
+
+.dock-icon {
+  display: flex;
+  align-items: center;
+  justify-name: center;
+  width: 60%;
+  height: 60%;
+  color: #ea580c; /* Color naranja institucional */
+}
+
+.dock-label {
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1f2937;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
