@@ -6,7 +6,7 @@ from app.database import get_db
 from app.models import Docente
 from app.schemas import DocenteCreate, DocenteResponse, DocenteUpdate
 
-router = APIRouter(prefix="/docentes", tags=["Docentes"])
+router = APIRouter(prefix="/v1/docentes", tags=["Docentes"])
 
 
 @router.get("/", response_model=List[DocenteResponse])
