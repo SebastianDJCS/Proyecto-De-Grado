@@ -9,10 +9,11 @@ from app.models import Asignatura as AsignaturaModel  # Asegúrate de que tu mod
 router = APIRouter(prefix="/asignaturas", tags=["Asignaturas"])
 
 class AsignaturaBase(BaseModel):
-    codigo: str
+    codigo_uccd: str
     nombre: str
     creditos: int
     semestre: int
+    horas_semanales: int
 
 class AsignaturaCreate(AsignaturaBase):
     pass
