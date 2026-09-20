@@ -12,7 +12,7 @@ def ejecutar_solver(db: Session, parametros: OptimizacionParametros) -> Resultad
     """
     Punto de entrada principal para ejecutar la optimización desde FastAPI.
     """
-    return resolver_horarios_uctp(db, semestre=parametros.semestre)
+    return resolver_horarios_uctp(db)
 
 
 __all__ = ["ejecutar_solver", "ResultadoOptimizacion"]

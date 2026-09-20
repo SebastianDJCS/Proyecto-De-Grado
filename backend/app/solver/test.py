@@ -62,16 +62,19 @@ def crear_datos_prueba(db: Session) -> None:
             documento="1001",
             nombre="Dr. Juan García",
             horas_maximas=20,
+            horas_administrativas=4,
         ),
         Docente(
             documento="1002",
             nombre="Dra. María López",
             horas_maximas=18,
+            horas_administrativas=2,
         ),
         Docente(
             documento="1003",
             nombre="Ing. Carlos Rodríguez",
             horas_maximas=16,
+            horas_administrativas=0,
         ),
     ]
     db.add_all(docentes)
@@ -102,10 +105,10 @@ def crear_datos_prueba(db: Session) -> None:
 
     # 3. Crear Salones
     salones = [
-        Salon(bloque="A", nomenclatura="A-101", capacidad=30),
-        Salon(bloque="A", nomenclatura="A-102", capacidad=40),
-        Salon(bloque="B", nomenclatura="B-201", capacidad=25),
-        Salon(bloque="B", nomenclatura="B-202", capacidad=50),
+        Salon(sede="A", nomenclatura="A-101", capacidad=30, tipo="AULA"),
+        Salon(sede="A", nomenclatura="A-102", capacidad=40, tipo="AULA"),
+        Salon(sede="B", nomenclatura="B-201", capacidad=25, tipo="AULA"),
+        Salon(sede="B", nomenclatura="B-202", capacidad=50, tipo="AUDITORIO"),
     ]
     db.add_all(salones)
     db.flush()

@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import HorarioOptimizado, Docente
+from app.models import HorarioOptimizado, Docente, Usuario, MateriaEstudiante, GrupoProyectado, Asignatura
 
 logger = logging.getLogger(__name__)
 
@@ -36,17 +36,15 @@ class HorarioDetalleSchema(BaseModel):
 def _mapear_horario(h: HorarioOptimizado) -> HorarioDetalleSchema:
     """Mapea una entidad HorarioOptimizado a su schema DTO de respuesta."""
     
-    # 1. Determinar el nombre/etiqueta del salón
     nombre_salon = "N/A / Oficina"
     if h.salon:
         nombre_salon = h.salon.nombre or h.salon.nomenclatura
 
-    # 2. Determinar el código del grupo y la asignatura
     codigo_grupo = "N/A"
     tipo_act = getattr(h, "tipo_actividad", "CLASE")
     nombre_asignatura = "Labor Administrativa" if tipo_act == "ADMINISTRATIVA" else "N/A"
 
-    if h.grupo_proyectado:
+    if h.grupo_proyectado is not None:
         if h.grupo_proyectado.numero_grupo is not None:
             codigo_grupo = str(h.grupo_proyectado.numero_grupo)
         if h.grupo_proyectado.asignatura:
@@ -155,4 +153,56 @@ def obtener_horario_por_salon(
         .filter(HorarioOptimizado.salon_id == salon_id)
         .all()
     )
+    return [_mapear_horario(h) for h in horarios]
+
+
+@router.get("/estudiante/{documento}", response_model=List[HorarioDetalleSchema])
+def obtener_horario_por_estudiante(
+    documento: str,
+    db: Session = Depends(get_db),
+):
+    """Obtiene el horario optimizado de un estudiante según sus materias inscritas (faltantes y repitiendo)."""
+    estudiante = db.query(Usuario).filter(
+        Usuario.documento == documento, Usuario.rol == "estudiante"
+    ).first()
+    if not estudiante:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Estudiante no encontrado",
+        )
+
+    materias_estudiante = (
+        db.query(MateriaEstudiante)
+        .filter(
+            MateriaEstudiante.estudiante_id == estudiante.id,
+            MateriaEstudiante.estado.in_(["faltante", "repitiendo"]),
+        )
+        .all()
+    )
+
+    if not materias_estudiante:
+        return []
+
+    asignatura_ids = [m.asignatura_id for m in materias_estudiante]
+
+    grupos = (
+        db.query(GrupoProyectado)
+        .filter(GrupoProyectado.asignatura_id.in_(asignatura_ids))
+        .all()
+    )
+
+    if not grupos:
+        return []
+
+    grupo_ids = [g.id for g in grupos]
+
+    horarios = (
+        db.query(HorarioOptimizado)
+        .filter(
+            HorarioOptimizado.grupo_proyectado_id.in_(grupo_ids),
+            HorarioOptimizado.tipo_actividad == "CLASE",
+        )
+        .all()
+    )
+
     return [_mapear_horario(h) for h in horarios]
