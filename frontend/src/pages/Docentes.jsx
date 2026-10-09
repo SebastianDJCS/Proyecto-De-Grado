@@ -1,14 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Users, Plus, Search, X, Clock, CreditCard, Edit2, Trash2, Briefcase } from 'lucide-react';
+import { Users, Plus, Search, X, Clock, CreditCard, Edit2, Trash2, Briefcase, BookOpen } from 'lucide-react';
 import DocenteForm from '../components/forms/DocenteForm';
-import { getDocentes, deleteDocente } from '../services/api';
+import { getDocentes, deleteDocente, getAsignaturas } from '../services/api';
 
 export default function Docentes() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [docentes, setDocentes] = useState([]);
+  const [catalogo, setCatalogo] = useState([]);
   const [busqueda, setBusqueda] = useState('');
   const [loadingList, setLoadingList] = useState(true);
   const [docenteAEditar, setDocenteAEditar] = useState(null);
+
+  useEffect(() => {
+    getAsignaturas()
+      .then((data) => setCatalogo(data))
+      .catch((err) => console.error('Error al obtener asignaturas:', err));
+  }, []);
 
   const fetchDocentes = async () => {
     try {
@@ -109,6 +116,26 @@ export default function Docentes() {
                   <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-1">
                     <CreditCard className="w-3.5 h-3.5 text-gray-400" /> Documento: {doc.documento}
                   </p>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {(doc.asignatura_ids || []).length === 0 ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+                        <BookOpen className="w-3 h-3" /> Sin materias asignadas (no dicta)
+                      </span>
+                    ) : (
+                      doc.asignatura_ids.map((asigId) => {
+                        const asig = catalogo.find((a) => a.id === asigId);
+                        return (
+                          <span
+                            key={asigId}
+                            className="inline-flex items-center gap-1 text-[10px] font-semibold bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full"
+                          >
+                            <BookOpen className="w-3 h-3" />
+                            {asig ? asig.nombre : `Materia #${asigId}`}
+                          </span>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
 
                 <div className="pt-3 border-t border-gray-200/60 flex items-center justify-between text-xs text-gray-500">

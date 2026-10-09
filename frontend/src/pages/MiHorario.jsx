@@ -88,6 +88,28 @@ export default function MiHorario() {
     }
   };
 
+  // Dos fundamentales en cruce: el estudiante elige cuál conservar.
+  const handleConservar = async (conservarId, descartarId) => {
+    if (generando) return;
+    if (!seleccionadas.includes(conservarId)) return;
+    const nuevas = seleccionadas.filter((id) => id !== descartarId);
+    if (nuevas.length === 0) return;
+
+    setSeleccionadas(nuevas);
+    setGenerando(true);
+    setError(null);
+    setResultado(null);
+
+    try {
+      const data = await generarHorarioEstudiante(nuevas);
+      setResultado(data);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Ocurrió un error al generar tu horario.');
+    } finally {
+      setGenerando(false);
+    }
+  };
+
   const gruposSemestre = SEMESTRES.map((s) => ({
     semestre: s,
     materias: materias.filter((m) => m.semestre === s),
@@ -205,7 +227,64 @@ export default function MiHorario() {
         )}
       </form>
 
-      {resultado && (
+      {resultado && resultado.status === 'REQUIERE_SELECCION' && (
+        <section className="bg-white p-6 rounded-xl shadow-sm border border-amber-300 space-y-4">
+          <div className="flex items-start gap-2 text-amber-800">
+            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold">{resultado.mensaje}</p>
+              <p className="text-xs mt-1">
+                Elige cuál de las materias en conflicto conservar para continuar:
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {resultado.pares_conflicto?.map((par, i) => (
+              <div
+                key={`${par.a_id}-${par.b_id}-${i}`}
+                className="p-4 rounded-xl border border-amber-200 bg-amber-50/60 flex flex-col md:flex-row md:items-center justify-between gap-3"
+              >
+                <span className="text-sm text-gray-700 font-medium">
+                  {par.a}{' '}
+                  <span className="text-[10px] font-semibold bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full uppercase">
+                    {par.a_tipo === 'ELECTIVA' ? 'Electiva' : 'Fundamental'}
+                  </span>
+                  <span className="text-gray-400 mx-2">vs</span>
+                  {par.b}{' '}
+                  <span className="text-[10px] font-semibold bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full uppercase">
+                    {par.b_tipo === 'ELECTIVA' ? 'Electiva' : 'Fundamental'}
+                  </span>
+                </span>
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleConservar(par.a_id, par.b_id)}
+                    className="px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium rounded-lg transition cursor-pointer"
+                  >
+                    Conservar {par.a}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleConservar(par.b_id, par.a_id)}
+                    className="px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium rounded-lg transition cursor-pointer"
+                  >
+                    Conservar {par.b}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {resultado.descartadas?.length > 0 && (
+            <p className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded border border-amber-200">
+              Electivas descartadas por conflicto: {resultado.descartadas.join(', ')}
+            </p>
+          )}
+        </section>
+      )}
+
+      {resultado && resultado.status !== 'REQUIERE_SELECCION' && (
         <section className="space-y-4">
           <div
             className={`p-4 rounded-xl text-sm flex items-start gap-2 border ${
@@ -223,6 +302,9 @@ export default function MiHorario() {
             )}
             <div>
               <p className="font-semibold">{resultado.mensaje}</p>
+              {resultado.descartadas?.length > 0 && (
+                <p className="mt-1">Electivas descartadas: {resultado.descartadas.join(', ')}</p>
+              )}
               {resultado.no_disponibles?.length > 0 && (
                 <p className="mt-1">Sin horario: {resultado.no_disponibles.join(', ')}</p>
               )}
@@ -246,6 +328,7 @@ export default function MiHorario() {
                   className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full"
                 >
                   {s.asignatura} · Grupo {s.grupo_codigo}
+                  {s.total_sesiones > 0 && ` (${s.total_sesiones} sesiones)`}
                 </span>
               ))}
             </div>

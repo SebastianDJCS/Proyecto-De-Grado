@@ -1,9 +1,28 @@
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, false, func
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Table, false, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
 	pass
+
+
+# Relación N:M entre docentes y materias (qué docente puede dictar qué materia).
+# Un docente SIN materias asignadas NO puede dictar ninguna materia.
+asignatura_docente = Table(
+	"asignatura_docente",
+	Base.metadata,
+	Column(
+		"asignatura_id",
+		ForeignKey("asignaturas.id", ondelete="CASCADE"),
+		primary_key=True,
+	),
+	Column(
+		"docente_id",
+		ForeignKey("docentes.id", ondelete="CASCADE"),
+		primary_key=True,
+	),
+)
+
 
 class Docente(Base):
     __tablename__ = "docentes"
@@ -23,6 +42,15 @@ class Docente(Base):
         back_populates="docente",
         cascade="all, delete-orphan",
     )
+    # Materias que puede dictar (vacío = no puede dictar ninguna)
+    asignaturas: Mapped[list["Asignatura"]] = relationship(
+        secondary="asignatura_docente",
+        back_populates="docentes",
+    )
+
+    @property
+    def asignatura_ids(self) -> list[int]:
+        return [asignatura.id for asignatura in self.asignaturas]
 
 class DisponibilidadDocente(Base):
 	__tablename__ = "disponibilidades_docentes"
@@ -67,11 +95,26 @@ class Asignatura(Base):
 	horas_semanales: Mapped[int] = mapped_column(Integer, nullable=False)
 	# Marca si el estudiante puede seleccionarla en "Mi Horario"
 	seleccionable: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=false(), default=False)
+	# Fundamental o Electiva (regla de desempate en conflictos del estudiante)
+	tipo: Mapped[str] = mapped_column(String(20), nullable=False, server_default="FUNDAMENTAL", default="FUNDAMENTAL")
+	# Sesiones semanales que tiene cada grupo de esta materia
+	secciones_por_grupo: Mapped[int] = mapped_column(Integer, nullable=False, server_default="1", default=1)
+	# Duración (en horas) de cada sección/sesión: 1, 2 o 3
+	horas_por_seccion: Mapped[int] = mapped_column(Integer, nullable=False, server_default="2", default=2)
 
 	grupos_proyectados: Mapped[list["GrupoProyectado"]] = relationship(
 		back_populates="asignatura",
 		cascade="all, delete-orphan",
 	)
+	# Docentes autorizados para dictar esta materia (vacío = ningún docente)
+	docentes: Mapped[list["Docente"]] = relationship(
+		secondary="asignatura_docente",
+		back_populates="asignaturas",
+	)
+
+	@property
+	def secciones(self) -> int:
+		return len(self.grupos_proyectados)
 
 
 class GrupoProyectado(Base):
@@ -112,6 +155,17 @@ class HorarioOptimizado(Base):
 	salon: Mapped[Salon | None] = relationship(back_populates="horarios_optimizados")
 
 
+class Usuario(Base):
+	__tablename__ = "usuarios"
+
+	id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+	username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+	password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+	nombre: Mapped[str] = mapped_column(String(255), nullable=False, server_default="")
+	rol: Mapped[str] = mapped_column(String(20), nullable=False, server_default="admin", default="admin")
+	activo: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true", default=True)
+
+
 __all__ = [
 	"Base",
 	"Docente",
@@ -120,4 +174,6 @@ __all__ = [
 	"Asignatura",
 	"GrupoProyectado",
 	"HorarioOptimizado",
+	"Usuario",
+	"asignatura_docente",
 ]

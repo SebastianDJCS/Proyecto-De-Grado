@@ -25,6 +25,7 @@ class AsignaturaSeleccionableItem(BaseModel):
     creditos: int
     grupos: int
     grupos_programados: int
+    tipo: str = "FUNDAMENTAL"
 
 
 class BloqueHorarioItem(BaseModel):
@@ -39,6 +40,8 @@ class GrupoSeleccionado(BaseModel):
     grupo_id: int
     grupo_codigo: str
     docente_nombre: str
+    tipo: str = "FUNDAMENTAL"
+    total_sesiones: int = 0
     bloques: List[BloqueHorarioItem]
 
 
@@ -46,6 +49,17 @@ class ConflictoHorario(BaseModel):
     dia: str
     bloque_horario: str
     asignaturas: List[str]
+
+
+class ParConflictoMateria(BaseModel):
+    """Par de materias imposibles de combinar sin cruces."""
+
+    a_id: int
+    a: str
+    a_tipo: str
+    b_id: int
+    b: str
+    b_tipo: str
 
 
 class HorarioEstudianteItem(BaseModel):
@@ -59,7 +73,7 @@ class HorarioEstudianteItem(BaseModel):
 
 
 class HorarioEstudianteResponse(BaseModel):
-    status: str  # "OK" | "PARCIAL" | "ERROR"
+    status: str  # "OK" | "PARCIAL" | "REQUIERE_SELECCION" | "ERROR"
     mensaje: str
     creditos_totales: int = 0
     max_creditos: int = 0
@@ -67,3 +81,7 @@ class HorarioEstudianteResponse(BaseModel):
     conflictos: List[ConflictoHorario]
     no_disponibles: List[str]
     horario: List[HorarioEstudianteItem]
+    # Electivas descartadas automáticamente por chocar con fundamentales
+    descartadas: List[str] = []
+    # Pares que requieren que el estudiante elija cuál conservar
+    pares_conflicto: List[ParConflictoMateria] = []

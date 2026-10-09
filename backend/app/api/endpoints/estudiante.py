@@ -3,6 +3,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
@@ -35,21 +36,37 @@ def listar_asignaturas_seleccionables(db: Session = Depends(get_db)):
         .all()
     )
 
+    ids = [a.id for a in asignaturas]
+
+    # 2 consultas agregadas en lugar de N+1 (evita ~134 queries a la BD remota).
+    grupos_por_asig: dict[int, int] = {}
+    programados_por_asig: dict[int, int] = {}
+    if ids:
+        grupos_por_asig = dict(
+            db.query(GrupoProyectado.asignatura_id, func.count(GrupoProyectado.id))
+            .filter(GrupoProyectado.asignatura_id.in_(ids))
+            .group_by(GrupoProyectado.asignatura_id)
+            .all()
+        )
+        programados_por_asig = dict(
+            db.query(
+                GrupoProyectado.asignatura_id,
+                func.count(func.distinct(HorarioOptimizado.grupo_proyectado_id)),
+            )
+            .join(
+                HorarioOptimizado,
+                HorarioOptimizado.grupo_proyectado_id == GrupoProyectado.id,
+            )
+            .filter(
+                GrupoProyectado.asignatura_id.in_(ids),
+                HorarioOptimizado.tipo_actividad == "CLASE",
+            )
+            .group_by(GrupoProyectado.asignatura_id)
+            .all()
+        )
+
     resultado = []
     for asig in asignaturas:
-        grupos = db.query(GrupoProyectado).filter(GrupoProyectado.asignatura_id == asig.id).all()
-        grupos_ids = [g.id for g in grupos]
-        programados = 0
-        if grupos_ids:
-            programados = (
-                db.query(HorarioOptimizado.grupo_proyectado_id)
-                .filter(
-                    HorarioOptimizado.grupo_proyectado_id.in_(grupos_ids),
-                    HorarioOptimizado.tipo_actividad == "CLASE",
-                )
-                .distinct()
-                .count()
-            )
         resultado.append(
             AsignaturaSeleccionableItem(
                 id=asig.id,
@@ -57,8 +74,9 @@ def listar_asignaturas_seleccionables(db: Session = Depends(get_db)):
                 nombre=asig.nombre,
                 semestre=asig.semestre,
                 creditos=asig.creditos,
-                grupos=len(grupos),
-                grupos_programados=programados,
+                grupos=grupos_por_asig.get(asig.id, 0),
+                grupos_programados=programados_por_asig.get(asig.id, 0),
+                tipo=getattr(asig, "tipo", None) or "FUNDAMENTAL",
             )
         )
     return resultado

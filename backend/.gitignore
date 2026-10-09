@@ -10,6 +10,10 @@ env/
 __pycache__/
 *.py[cod]
 
+# Logs de pruebas locales
+_server.log
+_server.log.err
+
 # IDEs
 .vscode/
 .idea/

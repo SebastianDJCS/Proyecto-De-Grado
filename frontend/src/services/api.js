@@ -67,3 +67,7 @@ export const getConfigEstudiante = async () => (await API.get('/estudiante/confi
 export const getAsignaturasSeleccionables = async () => (await API.get('/estudiante/asignaturas')).data;
 export const generarHorarioEstudiante = async (asignaturaIds) =>
   (await API.post('/estudiante/horario', { asignatura_ids: asignaturaIds })).data;
+
+// --- AUTENTICACIÓN ---
+export const login = async (username, password) =>
+  (await API.post('/auth/login', { username, password })).data;
