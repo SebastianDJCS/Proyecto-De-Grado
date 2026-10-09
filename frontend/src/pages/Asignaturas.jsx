@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BookOpen, Plus, Search, X, Award, Layers, Clock, Edit2, Trash2 } from 'lucide-react';
 import AsignaturaForm from '../components/forms/AsignaturaForm';
 import { getAsignaturas, deleteAsignatura } from '../services/api';
@@ -23,7 +23,21 @@ export default function Asignaturas() {
   };
 
   useEffect(() => {
-    fetchAsignaturas();
+    let activo = true;
+    getAsignaturas()
+      .then((data) => {
+        if (activo) {
+          setAsignaturas(data);
+          setLoadingList(false);
+        }
+      })
+      .catch((error) => {
+        console.error('Error al obtener las asignaturas:', error);
+        if (activo) setLoadingList(false);
+      });
+    return () => {
+      activo = false;
+    };
   }, []);
 
   const handleFormSuccess = () => {

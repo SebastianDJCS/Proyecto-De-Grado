@@ -93,21 +93,21 @@ class HorarioOptimizado(Base):
 	__tablename__ = "horarios_optimizados"
 
 	id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-	grupo_proyectado_id: Mapped[int] = mapped_column(
+	grupo_proyectado_id: Mapped[int | None] = mapped_column(
 		ForeignKey("grupos_proyectados.id", ondelete="CASCADE"),
-		nullable=False,
+		nullable=True,
 		index=True,
 	)
 	docente_id: Mapped[int] = mapped_column(ForeignKey("docentes.id", ondelete="CASCADE"), nullable=False, index=True)
-	salon_id: Mapped[int] = mapped_column(ForeignKey("salones.id", ondelete="CASCADE"), nullable=False, index=True)
+	salon_id: Mapped[int | None] = mapped_column(ForeignKey("salones.id", ondelete="CASCADE"), nullable=True, index=True)
 	dia: Mapped[str] = mapped_column(String(20), nullable=False)
 	bloque_horario: Mapped[str] = mapped_column(String(20), nullable=False)
 	tipo_actividad: Mapped[str] = mapped_column(String(20), nullable=False, default="CLASE")
 	fecha_generacion: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
-	grupo_proyectado: Mapped[GrupoProyectado] = relationship(back_populates="horarios_optimizados")
+	grupo_proyectado: Mapped[GrupoProyectado | None] = relationship(back_populates="horarios_optimizados")
 	docente: Mapped[Docente] = relationship(back_populates="horarios_optimizados")
-	salon: Mapped[Salon] = relationship(back_populates="horarios_optimizados")
+	salon: Mapped[Salon | None] = relationship(back_populates="horarios_optimizados")
 
 
 __all__ = [

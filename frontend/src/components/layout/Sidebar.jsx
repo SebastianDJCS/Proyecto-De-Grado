@@ -1,6 +1,5 @@
-import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, DoorOpen, BookOpen, Layers, CalendarCheck } from 'lucide-react';
+import { LayoutDashboard, Users, DoorOpen, BookOpen, CalendarCheck } from 'lucide-react';
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -12,7 +11,6 @@ export default function Sidebar() {
     { path: '/docentes', label: 'Docentes', icon: Users },
     { path: '/salones', label: 'Salones y Espacios', icon: DoorOpen },
     { path: '/asignaturas', label: 'Asignaturas', icon: BookOpen },
-    { path: '/grupos', label: 'Grupos Esperados', icon: Layers },
   ];
 
   return (

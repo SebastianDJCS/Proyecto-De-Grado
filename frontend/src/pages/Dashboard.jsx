@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { MallaHoraria } from '../components/MallaHoraria';
 import { resolverHorarios, getHorarioDocente } from '../services/api';
 import { Play, Search, Calendar, User, AlertCircle, CheckCircle2 } from 'lucide-react';

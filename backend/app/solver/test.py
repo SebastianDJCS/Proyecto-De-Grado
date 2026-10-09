@@ -102,10 +102,10 @@ def crear_datos_prueba(db: Session) -> None:
 
     # 3. Crear Salones
     salones = [
-        Salon(bloque="A", nomenclatura="A-101", capacidad=30),
-        Salon(bloque="A", nomenclatura="A-102", capacidad=40),
-        Salon(bloque="B", nomenclatura="B-201", capacidad=25),
-        Salon(bloque="B", nomenclatura="B-202", capacidad=50),
+        Salon(sede="A", nomenclatura="A-101", capacidad=30),
+        Salon(sede="A", nomenclatura="A-102", capacidad=40),
+        Salon(sede="B", nomenclatura="B-201", capacidad=25),
+        Salon(sede="B", nomenclatura="B-202", capacidad=50),
     ]
     db.add_all(salones)
     db.flush()

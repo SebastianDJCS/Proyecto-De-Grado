@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Users, Plus, Search, X, Clock, CreditCard, Edit2, Trash2, Briefcase } from 'lucide-react';
 import DocenteForm from '../components/forms/DocenteForm';
 import { getDocentes, deleteDocente } from '../services/api';
@@ -23,7 +23,21 @@ export default function Docentes() {
   };
 
   useEffect(() => {
-    fetchDocentes();
+    let activo = true;
+    getDocentes()
+      .then((data) => {
+        if (activo) {
+          setDocentes(data);
+          setLoadingList(false);
+        }
+      })
+      .catch((error) => {
+        console.error('Error al obtener los docentes:', error);
+        if (activo) setLoadingList(false);
+      });
+    return () => {
+      activo = false;
+    };
   }, []);
 
   const handleFormSuccess = () => {

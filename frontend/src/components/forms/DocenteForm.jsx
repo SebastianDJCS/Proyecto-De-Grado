@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { UserCheck, Save, Loader2 } from 'lucide-react';
 import { createDocente, updateDocente } from '../../services/api';
 

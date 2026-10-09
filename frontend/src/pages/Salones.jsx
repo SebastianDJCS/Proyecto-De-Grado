@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { DoorOpen, Plus, Search, X, Building, Users, Edit2, Trash2 } from 'lucide-react';
 import SalonForm from '../components/forms/SalonForm';
 import { getSalones, deleteSalon } from '../services/api';
@@ -25,7 +25,21 @@ export default function Salones() {
 
   // Cargar salones al abrir la página
   useEffect(() => {
-    fetchSalones();
+    let activo = true;
+    getSalones()
+      .then((data) => {
+        if (activo) {
+          setSalones(data);
+          setLoadingList(false);
+        }
+      })
+      .catch((error) => {
+        console.error('Error al obtener los salones:', error);
+        if (activo) setLoadingList(false);
+      });
+    return () => {
+      activo = false;
+    };
   }, []);
 
   // Función que se ejecuta cuando se crea o edita un salón con éxito

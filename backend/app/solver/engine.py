@@ -2,16 +2,17 @@
 Motor de optimización para el problema de horarios universitarios (UCTP).
 
 Este módulo implementa un solver basado en Google OR-Tools CP-SAT para resolver
-el problema de asignación de horarios, docentes y salones de forma óptima,
-respetando restricciones duras como horas lectivas, horas administrativas y
-evitando cruces de materias del mismo semestre.
+el problema de asignación de horarios, docentes y salones. Cada grupo conserva un
+único docente en todas sus clases, se respetan horas lectivas y administrativas,
+capacidad de salones y disponibilidad docente, evitando cruces de docente, salón
+y grupo por bloque. Las secciones paralelas de un mismo semestre sí pueden coincidir.
 
 Autor: Sistema de Optimización de Horarios
 """
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, NamedTuple, Tuple, Optional
+from typing import Any, Dict, List, NamedTuple, Tuple
 
 from ortools.sat.python import cp_model
 from pydantic import BaseModel
@@ -95,15 +96,26 @@ def _crear_variables_decision(
     docentes: List[Docente],
     salones: List[Salon],
     bloques_horarios: List[Tuple[str, str]],
+    disponibilidades: Dict[int, set],
 ) -> Tuple[Dict[Tuple[int, int, int, int], Any], Dict[Tuple[int, int], Any]]:
-    """Crea las variables binarias para clases y horas administrativas."""
+    """Crea las variables binarias para clases y horas administrativas.
+
+    Solo se crean variables de clase para combinaciones factibles
+    (docente disponible en el bloque y salón con capacidad suficiente),
+    reduciendo drásticamente el tamaño del modelo.
+    """
     logger.info("Creando variables de decisión (Clases y Horas Administrativas)...")
 
     vars_clase = {}
-    for g_idx, _ in enumerate(grupos):
-        for d_idx, _ in enumerate(docentes):
-            for s_idx, _ in enumerate(salones):
-                for t_idx, _ in enumerate(bloques_horarios):
+    for g_idx, grupo in enumerate(grupos):
+        for d_idx, docente in enumerate(docentes):
+            bloques_docente = disponibilidades.get(docente.id, set())
+            for s_idx, salon in enumerate(salones):
+                if grupo.total_estudiantes > salon.capacidad:
+                    continue
+                for t_idx, bloque in enumerate(bloques_horarios):
+                    if bloque not in bloques_docente:
+                        continue
                     var_name = f"x[g{g_idx}_d{d_idx}_s{s_idx}_t{t_idx}]"
                     vars_clase[(g_idx, d_idx, s_idx, t_idx)] = model.NewBoolVar(var_name)
 
@@ -185,72 +197,59 @@ def _agregar_restriccion_horas_docente(
 
 def _agregar_funcion_objetivo_penalizacion(
     model: cp_model.CpModel,
-    vars_clase: Dict[Tuple[int, int, int, int], Any],
     vars_admin: Dict[Tuple[int, int], Any],
     docentes: List[Docente],
     bloques_horarios: List[Tuple[str, str]],
+    faltantes: List[Any],
 ) -> None:
-    """Penaliza la dispersión de las horas administrativas para mantenerlas agrupadas."""
-    logger.info("Configurando función objetivo y penalizaciones de horario...")
-    
-    penalizaciones = []
+    """Define el objetivo: minimizar bloques sin cubrir y agrupar horas administrativas."""
+    logger.info("Configurando función objetivo...")
+
+    terminos = []
+
+    # 1. Prioridad alta: minimizar los bloques de clase sin cubrir.
+    if faltantes:
+        terminos.append(100 * sum(faltantes))
+
+    # 2. Penaliza la dispersión de las horas administrativas (peso bajo).
     dias_unicos = sorted(list(set(dia for dia, _ in bloques_horarios)))
 
     for d_idx, _ in enumerate(docentes):
-        dias_con_admin = []
         for dia in dias_unicos:
             bloques_dia = [
-                vars_admin[(d_idx, t_idx)] 
-                for t_idx, (b_dia, _) in enumerate(bloques_horarios) 
+                vars_admin[(d_idx, t_idx)]
+                for t_idx, (b_dia, _) in enumerate(bloques_horarios)
                 if b_dia == dia and (d_idx, t_idx) in vars_admin
             ]
-            
+
             if bloques_dia:
                 is_dia_activo = model.NewBoolVar(f"admin_dia_d{d_idx}_{dia}")
                 model.Add(sum(bloques_dia) >= 1).OnlyEnforceIf(is_dia_activo)
                 model.Add(sum(bloques_dia) == 0).OnlyEnforceIf(is_dia_activo.Not())
-                dias_con_admin.append(is_dia_activo)
+                terminos.append(is_dia_activo)
 
-        if dias_con_admin:
-            penalizaciones.append(sum(dias_con_admin) * 10)
-
-    if penalizaciones:
-        model.Minimize(sum(penalizaciones))
+    model.Minimize(sum(terminos))
 
 
-def _agregar_restriccion_no_cruce_semestres(
+def _agregar_restriccion_conflicto_grupo(
     model: cp_model.CpModel,
     vars_clase: Dict[Tuple[int, int, int, int], Any],
     grupos: List[GrupoProyectado],
     bloques_horarios: List[Tuple[str, str]],
 ) -> None:
-    """Evita cruces de materias del mismo semestre."""
-    semestres = {}
-    for g_idx, grupo in enumerate(grupos):
-        semestre = getattr(grupo.asignatura, "semestre", None)
-        if semestre is not None:
-            semestres.setdefault(semestre, []).append(g_idx)
+    """Un grupo solo puede tener una clase por bloque horario.
 
-    for semestre, grupo_indices in semestres.items():
-        if len(grupo_indices) > 1:
-            for t_idx, _ in enumerate(bloques_horarios):
-                clases_semestre = [
-                    var for (g, d, s, t), var in vars_clase.items()
-                    if g in grupo_indices and t == t_idx
-                ]
-                if clases_semestre:
-                    model.Add(sum(clases_semestre) <= 1)
-
-
-def _agregar_restriccion_capacidad_salon(
-    model: cp_model.CpModel,
-    vars_clase: Dict[Tuple[int, int, int, int], Any],
-    grupos: List[GrupoProyectado],
-    salones: List[Salon],
-) -> None:
-    for (g_idx, d_idx, s_idx, t_idx), var in vars_clase.items():
-        if grupos[g_idx].total_estudiantes > salones[s_idx].capacidad:
-            model.Add(var == 0)
+    Las secciones paralelas de un mismo semestre sí pueden coincidir en el tiempo,
+    por lo que la no superposición se exige por grupo y no por semestre.
+    """
+    for g_idx, _ in enumerate(grupos):
+        for t_idx, _ in enumerate(bloques_horarios):
+            clases_grupo = [
+                var for (g, d, s, t), var in vars_clase.items()
+                if g == g_idx and t == t_idx
+            ]
+            if clases_grupo:
+                model.Add(sum(clases_grupo) <= 1)
 
 
 def _agregar_restriccion_conflicto_salon(
@@ -270,12 +269,49 @@ def _agregar_restriccion_cobertura_grupos(
     model: cp_model.CpModel,
     vars_clase: Dict[Tuple[int, int, int, int], Any],
     grupos: List[GrupoProyectado],
-) -> None:
+) -> List[Any]:
+    """Fija los bloques requeridos por grupo y reporta los bloques faltantes.
+
+    Devuelve una variable de déficit por grupo: nunca se sobre-asigna
+    (asignados + déficit == requeridos) y el objetivo minimiza el déficit total.
+    """
+    faltantes = []
     for g_idx, grupo in enumerate(grupos):
-        bloques_necesarios = grupo.asignatura.horas_semanales // HORAS_POR_BLOQUE
+        horas = grupo.asignatura.horas_semanales or 0
+        bloques_necesarios = max(1, horas // HORAS_POR_BLOQUE) if horas > 0 else 0
         vars_grupo = [var for (g, d, s, t), var in vars_clase.items() if g == g_idx]
-        if vars_grupo and bloques_necesarios > 0:
-            model.Add(sum(vars_grupo) >= bloques_necesarios)
+
+        falta = model.NewIntVar(0, bloques_necesarios, f"falta_g{g_idx}")
+        if vars_grupo:
+            model.Add(sum(vars_grupo) + falta == bloques_necesarios)
+        else:
+            model.Add(falta == bloques_necesarios)
+        faltantes.append(falta)
+
+    return faltantes
+
+
+def _agregar_restriccion_docente_unico_grupo(
+    model: cp_model.CpModel,
+    vars_clase: Dict[Tuple[int, int, int, int], Any],
+    grupos: List[GrupoProyectado],
+) -> None:
+    """Cada grupo es dictado por un único docente en todas sus clases.
+
+    Se crea una variable z[g, d] que indica si el grupo g se asigna al docente d;
+    se exige exactamente un docente por grupo y se enlaza con las variables de clase.
+    """
+    for g_idx, _ in enumerate(grupos):
+        docentes_candidatos = sorted({d for (g, d, s, t) in vars_clase if g == g_idx})
+        if not docentes_candidatos:
+            continue
+
+        z = {d: model.NewBoolVar(f"z[g{g_idx}_d{d}]") for d in docentes_candidatos}
+        model.Add(sum(z.values()) == 1)
+
+        for (g, d, s, t), var in vars_clase.items():
+            if g == g_idx:
+                model.Add(var <= z[d])
 
 
 def _resolver_modelo(
@@ -376,20 +412,22 @@ def resolver_horarios_uctp(db: Session) -> ResultadoOptimizacion:
         model = cp_model.CpModel()
 
         vars_clase, vars_admin = _crear_variables_decision(
-            model, datos.grupos, datos.docentes, datos.salones, datos.bloques_horarios
+            model, datos.grupos, datos.docentes, datos.salones, datos.bloques_horarios, datos.disponibilidades
         )
 
-        _agregar_restriccion_capacidad_salon(model, vars_clase, datos.grupos, datos.salones)
         _agregar_restriccion_disponibilidad_docente(
             model, vars_clase, vars_admin, datos.docentes, datos.bloques_horarios, datos.disponibilidades
         )
         _agregar_restriccion_conflicto_docente(model, vars_clase, vars_admin, datos.docentes, datos.bloques_horarios)
         _agregar_restriccion_conflicto_salon(model, vars_clase, datos.salones, datos.bloques_horarios)
         _agregar_restriccion_horas_docente(model, vars_clase, vars_admin, datos.docentes)
-        _agregar_restriccion_cobertura_grupos(model, vars_clase, datos.grupos)
-        _agregar_restriccion_no_cruce_semestres(model, vars_clase, datos.grupos, datos.bloques_horarios)
+        faltantes = _agregar_restriccion_cobertura_grupos(model, vars_clase, datos.grupos)
+        _agregar_restriccion_conflicto_grupo(model, vars_clase, datos.grupos, datos.bloques_horarios)
+        _agregar_restriccion_docente_unico_grupo(model, vars_clase, datos.grupos)
 
-        _agregar_funcion_objetivo_penalizacion(model, vars_clase, vars_admin, datos.docentes, datos.bloques_horarios)
+        _agregar_funcion_objetivo_penalizacion(
+            model, vars_admin, datos.docentes, datos.bloques_horarios, faltantes
+        )
 
         status_str, elapsed_time, asig_clase, asig_admin = _resolver_modelo(model, vars_clase, vars_admin)
 

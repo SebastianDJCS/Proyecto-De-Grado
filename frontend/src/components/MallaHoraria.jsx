@@ -1,5 +1,3 @@
-import React from 'react';
-
 const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
 // Horas base de referencia para las líneas de la tabla (cada hora = una franja de altura fija)
