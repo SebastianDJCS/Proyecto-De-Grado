@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Instancia base de Axios
 const API = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
 });
 
 // 1. Ejecutar el Solver CP-SAT (acepta semestre opcional)
@@ -28,13 +28,13 @@ export const getHorarioGrupo = async (grupoId) => {
 
 // 4. Crear un nuevo salón
 export const createSalon = async (salonData) => {
-  const response = await API.post('/salones', salonData);
+  const response = await API.post('/salones/', salonData);
   return response.data;
 };
 
 // 5. Obtener todos los salones (para mostrarlos en tablas o listas)
 export const getSalones = async () => {
-  const response = await API.get('/salones');
+  const response = await API.get('/salones/');
   return response.data;
 };
 
@@ -51,13 +51,18 @@ export const deleteSalon = async (id) => {
 };
 
 // --- DOCENTES ---
-export const getDocentes = async () => (await API.get('/v1/docentes/')).data;
-export const createDocente = async (data) => (await API.post('/v1/docentes/', data)).data;
-export const updateDocente = async (id, data) => (await API.put(`/v1/docentes/${id}`, data)).data;
-export const deleteDocente = async (id) => (await API.delete(`/v1/docentes/${id}`)).data;
+export const getDocentes = async () => (await API.get('/docentes/')).data;
+export const createDocente = async (data) => (await API.post('/docentes/', data)).data;
+export const updateDocente = async (id, data) => (await API.put(`/docentes/${id}`, data)).data;
+export const deleteDocente = async (id) => (await API.delete(`/docentes/${id}`)).data;
 
 // --- ASIGNATURAS ---
-export const getAsignaturas = async () => (await API.get('/asignaturas')).data;
-export const createAsignatura = async (data) => (await API.post('/asignaturas', data)).data;
+export const getAsignaturas = async () => (await API.get('/asignaturas/')).data;
+export const createAsignatura = async (data) => (await API.post('/asignaturas/', data)).data;
 export const updateAsignatura = async (id, data) => (await API.put(`/asignaturas/${id}`, data)).data;
 export const deleteAsignatura = async (id) => (await API.delete(`/asignaturas/${id}`)).data;
+
+// --- ESTUDIANTE (Mi Horario) ---
+export const getAsignaturasSeleccionables = async () => (await API.get('/estudiante/asignaturas')).data;
+export const generarHorarioEstudiante = async (asignaturaIds) =>
+  (await API.post('/estudiante/horario', { asignatura_ids: asignaturaIds })).data;

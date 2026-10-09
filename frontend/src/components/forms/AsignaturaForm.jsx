@@ -10,6 +10,7 @@ export default function AsignaturaForm({ asignaturaToEdit, onSuccess }) {
       semestre: '',
       creditos: '',
       horas_semanales: '',
+      seleccionable: false,
     }
   );
 
@@ -17,9 +18,10 @@ export default function AsignaturaForm({ asignaturaToEdit, onSuccess }) {
   const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
 
   const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: type === 'checkbox' ? checked : value,
     });
   };
 
@@ -34,6 +36,7 @@ export default function AsignaturaForm({ asignaturaToEdit, onSuccess }) {
         semestre: parseInt(formData.semestre, 10) || 1,
         creditos: parseInt(formData.creditos, 10) || 0,
         horas_semanales: parseInt(formData.horas_semanales, 10) || 0,
+        seleccionable: !!formData.seleccionable,
       };
 
       if (asignaturaToEdit) {
@@ -146,6 +149,19 @@ export default function AsignaturaForm({ asignaturaToEdit, onSuccess }) {
             />
           </div>
         </div>
+
+        <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50 cursor-pointer">
+          <input
+            type="checkbox"
+            name="seleccionable"
+            checked={!!formData.seleccionable}
+            onChange={handleChange}
+            className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
+          />
+          <span className="text-sm text-gray-700">
+            Disponible para que los estudiantes la elijan en <strong>Mi Horario</strong>
+          </span>
+        </label>
 
         <button
           type="submit"

@@ -14,8 +14,11 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.endpoints import horarios, solver, upload, salones, docentes, asignaturas, grupos, disponibilidades
+from app.api.endpoints import horarios, solver, upload, salones, docentes, asignaturas, grupos, disponibilidades, estudiante
+from app.config import get_settings
 from app.database import Base, engine
+
+settings = get_settings()
 
 # Configurar logging
 logging.basicConfig(
@@ -50,7 +53,7 @@ app = FastAPI(
 # Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -64,6 +67,7 @@ app.include_router(asignaturas.router, prefix="/api")
 app.include_router(salones.router, prefix="/api")
 app.include_router(grupos.router, prefix="/api")
 app.include_router(horarios.router, prefix="/api")
+app.include_router(estudiante.router, prefix="/api")
 
 if getattr(upload, "router", None):
     app.include_router(upload.router, prefix="/api", tags=["Carga de Datos"])

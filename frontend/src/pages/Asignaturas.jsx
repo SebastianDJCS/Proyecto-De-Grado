@@ -114,6 +114,11 @@ export default function Asignaturas() {
                     </span>
                   </div>
                   <h3 className="text-lg font-bold text-gray-900">{asig.nombre}</h3>
+                  {asig.seleccionable && (
+                    <span className="inline-block mt-1 text-[10px] font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                      Disponible para estudiantes
+                    </span>
+                  )}
                 </div>
 
                 <div className="pt-3 border-t border-gray-200/60 flex items-center justify-between text-xs text-gray-500">

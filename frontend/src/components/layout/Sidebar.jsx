@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, DoorOpen, BookOpen, CalendarCheck } from 'lucide-react';
+import { LayoutDashboard, Users, DoorOpen, BookOpen, CalendarCheck, Sparkles } from 'lucide-react';
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -11,6 +11,7 @@ export default function Sidebar() {
     { path: '/docentes', label: 'Docentes', icon: Users },
     { path: '/salones', label: 'Salones y Espacios', icon: DoorOpen },
     { path: '/asignaturas', label: 'Asignaturas', icon: BookOpen },
+    { path: '/mi-horario', label: 'Mi Horario', icon: Sparkles },
   ];
 
   return (

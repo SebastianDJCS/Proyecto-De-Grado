@@ -1,4 +1,4 @@
-from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, false, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -65,6 +65,8 @@ class Asignatura(Base):
 	semestre: Mapped[int] = mapped_column(Integer, nullable=False)
 	creditos: Mapped[int] = mapped_column(Integer, nullable=False)
 	horas_semanales: Mapped[int] = mapped_column(Integer, nullable=False)
+	# Marca si el estudiante puede seleccionarla en "Mi Horario"
+	seleccionable: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=false(), default=False)
 
 	grupos_proyectados: Mapped[list["GrupoProyectado"]] = relationship(
 		back_populates="asignatura",

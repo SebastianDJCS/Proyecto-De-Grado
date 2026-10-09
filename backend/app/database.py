@@ -1,17 +1,13 @@
-import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from dotenv import load_dotenv
 
-# Importamos la Base que ya creaste en models.py
-from app.models import Base 
+from app.config import get_settings
+from app.models import Base
 
-load_dotenv()
+# Configuración desde variables de entorno (.env)
+settings = get_settings()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-if not DATABASE_URL:
-    raise ValueError("Error: La variable DATABASE_URL no está configurada en .env")
+DATABASE_URL = settings.DATABASE_URL
 
 # Se agregan pool_pre_ping y pool_recycle para evitar "SSL connection has been closed unexpectedly"
 engine = create_engine(
@@ -21,6 +17,7 @@ engine = create_engine(
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 def get_db():
     db = SessionLocal()

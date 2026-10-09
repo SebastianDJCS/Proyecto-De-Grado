@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import Docentes from './pages/Docentes';
 import Salones from './pages/Salones';
 import Asignaturas from './pages/Asignaturas';
+import MiHorario from './pages/MiHorario';
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
                 temporalmente al Dashboard o a Docentes para que no arrojen advertencia */}
             <Route path="/salones" element={<Salones />} />
             <Route path="/asignaturas" element={<Asignaturas />} />
+            <Route path="/mi-horario" element={<MiHorario />} />
           </Routes>
         </main>
       </div>
