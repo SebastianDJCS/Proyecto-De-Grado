@@ -63,6 +63,7 @@ export const updateAsignatura = async (id, data) => (await API.put(`/asignaturas
 export const deleteAsignatura = async (id) => (await API.delete(`/asignaturas/${id}`)).data;
 
 // --- ESTUDIANTE (Mi Horario) ---
+export const getConfigEstudiante = async () => (await API.get('/estudiante/config')).data;
 export const getAsignaturasSeleccionables = async () => (await API.get('/estudiante/asignaturas')).data;
 export const generarHorarioEstudiante = async (asignaturaIds) =>
   (await API.post('/estudiante/horario', { asignatura_ids: asignaturaIds })).data;

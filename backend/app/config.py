@@ -15,6 +15,7 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
+    MAX_CREDITOS: int = 20
 
     @property
     def cors_origins_list(self) -> list[str]:

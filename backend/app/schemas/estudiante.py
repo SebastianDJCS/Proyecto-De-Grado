@@ -9,6 +9,12 @@ class SeleccionHorarioRequest(BaseModel):
     asignatura_ids: List[int] = Field(min_length=1)
 
 
+class ConfigEstudiante(BaseModel):
+    """Reglas para la selección de materias del estudiante."""
+
+    max_creditos: int
+
+
 class AsignaturaSeleccionableItem(BaseModel):
     """Materia ofertada para que el estudiante la pueda elegir."""
 
@@ -55,6 +61,8 @@ class HorarioEstudianteItem(BaseModel):
 class HorarioEstudianteResponse(BaseModel):
     status: str  # "OK" | "PARCIAL" | "ERROR"
     mensaje: str
+    creditos_totales: int = 0
+    max_creditos: int = 0
     seleccion: List[GrupoSeleccionado]
     conflictos: List[ConflictoHorario]
     no_disponibles: List[str]
