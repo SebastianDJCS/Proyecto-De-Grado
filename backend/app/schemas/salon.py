@@ -1,13 +1,13 @@
 from typing import Optional
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SalonBase(BaseModel):
-    sede: str
-    nomenclatura: str
+    sede: str = Field(min_length=1)
+    nomenclatura: str = Field(min_length=1)
     nombre: Optional[str] = None
     tipo: str = "AULA"
-    capacidad: int
+    capacidad: int = Field(gt=0)
 
 
 class SalonCreate(SalonBase):
@@ -15,11 +15,11 @@ class SalonCreate(SalonBase):
 
 
 class SalonUpdate(BaseModel):
-    sede: Optional[str] = None
-    nomenclatura: Optional[str] = None
+    sede: Optional[str] = Field(default=None, min_length=1)
+    nomenclatura: Optional[str] = Field(default=None, min_length=1)
     nombre: Optional[str] = None
     tipo: Optional[str] = None
-    capacidad: Optional[int] = None
+    capacidad: Optional[int] = Field(default=None, gt=0)
 
 
 class SalonResponse(SalonBase):

@@ -102,29 +102,29 @@ def procesar_excel_uxxi(file_path: str, db: Session) -> Dict[str, object]:
 						resumen["docentes_creados"] += 1
 
 				# Salon
-				bloque = row.get("salon_bloque", "")
+				sede = row.get("salon_sede", "") or row.get("salon_bloque", "")
 				nomenclatura = row.get("salon_nomenclatura", "")
 				capacidad = int(row.get("salon_capacidad", 0) or 0)
 
 				salon_obj = None
 				if nomenclatura:
-					# intentar buscar por nomenclatura y bloque para evitar duplicados
+					# intentar buscar por nomenclatura y sede para evitar duplicados
 					stmt = select(Salon).filter_by(nomenclatura=nomenclatura)
-					if bloque:
-						stmt = stmt.filter_by(bloque=bloque)
+					if sede:
+						stmt = stmt.filter_by(sede=sede)
 					salon_obj = db.execute(stmt).scalars().first()
 					if salon_obj:
 						updated = False
 						if capacidad and salon_obj.capacidad != capacidad:
 							salon_obj.capacidad = capacidad
 							updated = True
-						if bloque and salon_obj.bloque != bloque:
-							salon_obj.bloque = bloque
+						if sede and salon_obj.sede != sede:
+							salon_obj.sede = sede
 							updated = True
 						if updated:
 							resumen["salones_actualizados"] += 1
 					else:
-						salon_obj = Salon(bloque=bloque or "", nomenclatura=nomenclatura, capacidad=capacidad)
+						salon_obj = Salon(sede=sede or "", nomenclatura=nomenclatura, capacidad=capacidad)
 						db.add(salon_obj)
 						db.flush()
 						resumen["salones_creados"] += 1

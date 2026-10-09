@@ -1,4 +1,4 @@
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Float, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, false, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -65,6 +65,8 @@ class Asignatura(Base):
 	semestre: Mapped[int] = mapped_column(Integer, nullable=False)
 	creditos: Mapped[int] = mapped_column(Integer, nullable=False)
 	horas_semanales: Mapped[int] = mapped_column(Integer, nullable=False)
+	# Marca si el estudiante puede seleccionarla en "Mi Horario"
+	seleccionable: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=false(), default=False)
 
 	grupos_proyectados: Mapped[list["GrupoProyectado"]] = relationship(
 		back_populates="asignatura",
@@ -105,42 +107,9 @@ class HorarioOptimizado(Base):
 	tipo_actividad: Mapped[str] = mapped_column(String(20), nullable=False, default="CLASE")
 	fecha_generacion: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
-	grupo_proyectado: Mapped[GrupoProyectado] = relationship(back_populates="horarios_optimizados")
+	grupo_proyectado: Mapped[GrupoProyectado | None] = relationship(back_populates="horarios_optimizados")
 	docente: Mapped[Docente] = relationship(back_populates="horarios_optimizados")
-	salon: Mapped[Salon] = relationship(back_populates="horarios_optimizados")
-
-
-class Usuario(Base):
-	__tablename__ = "usuarios"
-
-	id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-	documento: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
-	nombre: Mapped[str] = mapped_column(String(255), nullable=False)
-	email: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
-	password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-	rol: Mapped[str] = mapped_column(String(20), nullable=False, default="estudiante")
-	semestre_actual: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-	is_active: Mapped[bool] = mapped_column(Integer, nullable=False, default=1)
-	created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
-
-	materias: Mapped[list["MateriaEstudiante"]] = relationship(
-		back_populates="estudiante",
-		cascade="all, delete-orphan",
-	)
-
-
-class MateriaEstudiante(Base):
-	__tablename__ = "materias_estudiante"
-
-	id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-	estudiante_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False, index=True)
-	asignatura_id: Mapped[int] = mapped_column(ForeignKey("asignaturas.id", ondelete="CASCADE"), nullable=False, index=True)
-	estado: Mapped[str] = mapped_column(String(20), nullable=False, default="faltante")
-	calificacion: Mapped[float | None] = mapped_column(Float, nullable=True)
-	created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
-
-	estudiante: Mapped[Usuario] = relationship(back_populates="materias")
-	asignatura: Mapped[Asignatura] = relationship()
+	salon: Mapped[Salon | None] = relationship(back_populates="horarios_optimizados")
 
 
 __all__ = [
@@ -151,6 +120,4 @@ __all__ = [
 	"Asignatura",
 	"GrupoProyectado",
 	"HorarioOptimizado",
-	"Usuario",
-	"MateriaEstudiante",
 ]

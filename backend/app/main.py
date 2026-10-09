@@ -14,10 +14,11 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.endpoints import horarios, solver, upload, salones, docentes, asignaturas, grupos, disponibilidades, auth, estudiantes
-from app.database import Base, engine, SessionLocal
-from app.models import Usuario
-from app.security import hash_password
+from app.api.endpoints import horarios, solver, upload, salones, docentes, asignaturas, grupos, disponibilidades, estudiante
+from app.config import get_settings
+from app.database import Base, engine
+
+settings = get_settings()
 
 # Configurar logging
 logging.basicConfig(
@@ -30,28 +31,11 @@ logger = logging.getLogger(__name__)
 # Gestor de ciclo de vida de la aplicación
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Código ejecutado al iniciar la aplicación
     logger.info("Inicializando base de datos...")
     Base.metadata.create_all(bind=engine)
-
-    db = SessionLocal()
-    try:
-        admin = db.query(Usuario).filter(Usuario.rol == "admin").first()
-        if not admin:
-            admin_user = Usuario(
-                documento="admin",
-                nombre="Administrador",
-                email="admin@uctp.edu.co",
-                password_hash=hash_password("admin123"),
-                rol="admin",
-                semestre_actual=1,
-            )
-            db.add(admin_user)
-            db.commit()
-            logger.info("Usuario administrador creado: admin / admin123")
-    finally:
-        db.close()
-
     yield
+    # Código ejecutado al apagar la aplicación (si se requiere cleanup)
     logger.info("Cerrando aplicación...")
 
 
@@ -69,15 +53,13 @@ app = FastAPI(
 # Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Agrupación de Routers
-app.include_router(auth.router, prefix="/api")
-app.include_router(estudiantes.router, prefix="/api")
 app.include_router(solver.router, prefix="/api")
 app.include_router(docentes.router, prefix="/api")
 app.include_router(disponibilidades.router, prefix="/api")
@@ -85,6 +67,7 @@ app.include_router(asignaturas.router, prefix="/api")
 app.include_router(salones.router, prefix="/api")
 app.include_router(grupos.router, prefix="/api")
 app.include_router(horarios.router, prefix="/api")
+app.include_router(estudiante.router, prefix="/api")
 
 if getattr(upload, "router", None):
     app.include_router(upload.router, prefix="/api", tags=["Carga de Datos"])
