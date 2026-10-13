@@ -437,6 +437,16 @@ def _resolver_modelo(
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = int(os.getenv("SOLVER_MAX_TIME_SECONDS", "300"))
 
+    # Tope de hilos de búsqueda: 0 = usar todos los disponibles (por defecto).
+    num_workers = int(os.getenv("SOLVER_WORKERS", "0"))
+    if num_workers >= 0:
+        solver.parameters.num_search_workers = num_workers
+
+    # Tope de memoria en MB: 0 = sin límite (por defecto).
+    max_memory = int(os.getenv("SOLVER_MAX_MEMORY_MB", "0"))
+    if max_memory > 0:
+        solver.parameters.max_memory_in_mb = max_memory
+
     start_time = datetime.now()
     status = solver.Solve(model)
     elapsed_time = (datetime.now() - start_time).total_seconds()
