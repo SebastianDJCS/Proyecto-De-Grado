@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Docentes from './pages/Docentes';
@@ -23,10 +23,21 @@ function RutaProtegida({ rolRequerido, children }) {
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="flex bg-gray-100 min-h-screen">
-        <Sidebar />
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-          <Routes>
+      <Contenido />
+    </BrowserRouter>
+  );
+}
+
+function Contenido() {
+  const { pathname } = useLocation();
+  const enLogin = pathname.replace(/\/+$/, '') === '/login';
+
+  return (
+    <div className="flex bg-gray-100 min-h-screen">
+      {/* En el login no se muestra la navegacion principal */}
+      {!enLogin && <Sidebar />}
+      <main className={`flex-1 ${enLogin ? '' : 'p-4 md:p-8 overflow-y-auto'}`}>
+        <Routes>
             <Route path="/login" element={<LoginPage />} />
 
             <Route
@@ -70,8 +81,7 @@ export default function App() {
               }
             />
           </Routes>
-        </main>
-      </div>
-    </BrowserRouter>
+      </main>
+    </div>
   );
 }
