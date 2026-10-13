@@ -1,0 +1,31 @@
+name: Continuous Deployment to Azure
+
+on:
+  push:
+    branches:
+      - main  # Cambia 'main' por 'master' si tu rama principal se llama master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Azure VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            # 1. Ir a la carpeta del proyecto en la VM (ajusta la ruta si se llama distinto)
+            cd ~/uctp || cd ~/app/backend
+            
+            # 2. Traer los cambios más recientes del repositorio
+            git pull origin main
+            
+            # 3. Reconstruir e iniciar los contenedores
+            docker compose up -d --build
+            
+            # 4. Limpiar imágenes de Docker en desuso para ahorrar espacio
+            docker image prune -f
