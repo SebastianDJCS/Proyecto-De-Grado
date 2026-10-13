@@ -1,0 +1,51 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: uctp-backend
+    #8000 solo queda para diagnostico; el publico es el80 (nginx del frontend).
+    ports:
+      - "8000:8000"
+    env_file:
+      # DATABASE_URL y CORS_ORIGINS (crea este archivo desde backend/.env.example)
+      - ./backend/.env
+    environment:
+      # Tope de tiempo del solver global (segundos).
+      # <300 (timeout de nginx proxy) para que la petición no muera antes que el solver.
+      SOLVER_MAX_TIME_SECONDS: ${SOLVER_MAX_TIME_SECONDS:-240}
+      # Hilos de búsqueda del solver: 0 = usar todos los vCPU disponibles.
+      SOLVER_WORKERS: ${SOLVER_WORKERS:-0}
+      # Límite de RAM del solver en MB: 0 = sin límite.
+      SOLVER_MAX_MEMORY_MB: ${SOLVER_MAX_MEMORY_MB:-0}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # Sirve el build del React y hace de proxy de /api hacia el backend.
+  # Caddy gestiona HTTPS automatico (Let's Encrypt) para ricardocogollo.tech.
+  frontend:
+    build:
+      context: ./frontend
+    container_name: uctp-frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Persisten el certificado Let's Encrypt entre reinicios.
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

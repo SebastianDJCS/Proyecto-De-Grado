@@ -4,13 +4,12 @@ Expone las funciones principales para ejecutar la optimización desde la API.
 """
 
 from sqlalchemy.orm import Session
-from app.schemas.horario import OptimizacionParametros
 from app.solver.engine import resolver_horarios_uctp, ResultadoOptimizacion
 
 
-def ejecutar_solver(db: Session, parametros: OptimizacionParametros) -> ResultadoOptimizacion:
+def ejecutar_solver(db: Session) -> ResultadoOptimizacion:
     """
-    Punto de entrada principal para ejecutar la optimización desde FastAPI.
+    Punto de entrada principal para ejecutar la optimización global desde FastAPI.
     """
     return resolver_horarios_uctp(db)
 

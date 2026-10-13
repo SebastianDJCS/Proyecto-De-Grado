@@ -1,24 +1,46 @@
-import { useState } from 'react';
-import { UserCheck, Save, Loader2 } from 'lucide-react';
-import { createDocente, updateDocente } from '../../services/api';
+import { useEffect, useState } from 'react';
+import { UserCheck, Save, Loader2, BookOpen } from 'lucide-react';
+import { createDocente, updateDocente, getAsignaturas } from '../../services/api';
 
 export default function DocenteForm({ docenteToEdit, onSuccess }) {
-  const [formData, setFormData] = useState(
-    docenteToEdit || {
-      documento: '',
-      nombre: '',
-      horas_maximas: '',
-      horas_administrativas: '',
-    }
+  const [formData, setFormData] = useState(() =>
+    docenteToEdit
+      ? { ...docenteToEdit, asignatura_ids: docenteToEdit.asignatura_ids || [] }
+      : {
+          documento: '',
+          nombre: '',
+          horas_maximas: '',
+          horas_administrativas: '',
+          asignatura_ids: [],
+        }
   );
 
+  const [catalogo, setCatalogo] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
+
+  useEffect(() => {
+    getAsignaturas()
+      .then((data) => setCatalogo(data))
+      .catch((err) => console.error('Error al cargar asignaturas:', err));
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
+    });
+  };
+
+  const toggleAsignatura = (id) => {
+    setFormData((prev) => {
+      const actual = prev.asignatura_ids || [];
+      return {
+        ...prev,
+        asignatura_ids: actual.includes(id)
+          ? actual.filter((x) => x !== id)
+          : [...actual, id],
+      };
     });
   };
 
@@ -32,6 +54,7 @@ export default function DocenteForm({ docenteToEdit, onSuccess }) {
         ...formData,
         horas_maximas: parseInt(formData.horas_maximas, 10) || 0,
         horas_administrativas: parseInt(formData.horas_administrativas, 10) || 0,
+        asignatura_ids: formData.asignatura_ids || [],
       };
 
       if (docenteToEdit) {
@@ -132,6 +155,39 @@ export default function DocenteForm({ docenteToEdit, onSuccess }) {
           />
         </div>
 
+        <div>
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+            <BookOpen className="w-4 h-4 text-orange-600" /> Materias que puede dictar
+          </label>
+          <div className="p-3 rounded-xl border border-gray-200 bg-gray-50 space-y-2 max-h-48 overflow-y-auto">
+            {catalogo.length === 0 ? (
+              <p className="text-xs text-gray-400">No hay materias registradas todavía.</p>
+            ) : (
+              catalogo.map((asig) => {
+                const marcada = (formData.asignatura_ids || []).includes(asig.id);
+                return (
+                  <label
+                    key={asig.id}
+                    className="flex items-center gap-2.5 text-sm text-gray-700 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={marcada}
+                      onChange={() => toggleAsignatura(asig.id)}
+                      className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
+                    />
+                    <span className="font-mono text-[11px] text-gray-500">{asig.codigo_uccd}</span>
+                    <span>{asig.nombre}</span>
+                  </label>
+                );
+              })
+            )}
+          </div>
+          <p className="text-[11px] text-gray-400 mt-1">
+            Si no marca ninguna materia, el docente no podrá dictar ninguna hasta que se le asigne.
+          </p>
+        </div>
+
         <button
           type="submit"
           disabled={loading}
@@ -152,4 +208,4 @@ export default function DocenteForm({ docenteToEdit, onSuccess }) {
       </form>
     </div>
   );
-} 
+}

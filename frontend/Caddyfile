@@ -1,0 +1,22 @@
+# Caddy obtiene y renueva el certificado Let's Encrypt solo (puertos 80/443).
+ricardocogollo.tech {
+	encode gzip
+
+	@api path /api/*
+	handle @api {
+		# Proxy al backend FastAPI (nombre del servicio en la red de Docker).
+		reverse_proxy backend:8000
+	}
+
+	handle {
+		root * /srv
+		# SPA de React: si no existe el archivo, sirve index.html
+		try_files {path} {path}/ /index.html
+		file_server
+	}
+}
+
+# Si alguien entra por la IP, redirige al dominio.
+http:// {
+	redir https://ricardocogollo.tech{uri} permanent
+}

@@ -9,6 +9,11 @@ settings = get_settings()
 
 DATABASE_URL = settings.DATABASE_URL
 
+# Render/Neon pueden entregar la URL con el esquema antiguo "postgres://".
+# SQLAlchemy 2.x solo acepta "postgresql://", así que lo normalizamos aquí.
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 # Se agregan pool_pre_ping y pool_recycle para evitar "SSL connection has been closed unexpectedly"
 engine = create_engine(
     DATABASE_URL,

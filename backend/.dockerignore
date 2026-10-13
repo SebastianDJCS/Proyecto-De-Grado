@@ -1,0 +1,17 @@
+# No subir al contenedor
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+
+# Secrets y configuración local (DATABASE_URL/CORS van por env en runtime)
+.env
+*.log
+_server.log*
+
+# No necesarios en runtime
+render.yaml
+runtime.txt
+*.md

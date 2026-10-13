@@ -3,15 +3,22 @@ import { BookOpen, Save, Loader2 } from 'lucide-react';
 import { createAsignatura, updateAsignatura } from '../../services/api';
 
 export default function AsignaturaForm({ asignaturaToEdit, onSuccess }) {
-  const [formData, setFormData] = useState(
-    asignaturaToEdit || {
-      codigo_uccd: '',
-      nombre: '',
-      semestre: '',
-      creditos: '',
-      horas_semanales: '',
-      seleccionable: false,
-    }
+  const [formData, setFormData] = useState(() =>
+    asignaturaToEdit
+      ? { ...asignaturaToEdit, num_secciones: asignaturaToEdit.secciones ?? 0 }
+      : {
+          codigo_uccd: '',
+          nombre: '',
+          semestre: '',
+          creditos: '',
+          horas_semanales: '',
+          seleccionable: false,
+          tipo: 'FUNDAMENTAL',
+          num_secciones: 1,
+          secciones_por_grupo: 1,
+          horas_por_seccion: 2,
+          estudiantes_por_seccion: '',
+        }
   );
 
   const [loading, setLoading] = useState(false);
@@ -31,20 +38,30 @@ export default function AsignaturaForm({ asignaturaToEdit, onSuccess }) {
     setMensaje({ texto: '', tipo: '' });
 
     try {
+      const seccionesGrupo = parseInt(formData.secciones_por_grupo, 10) || 1;
+      const horasSeccion = Math.min(3, Math.max(1, parseInt(formData.horas_por_seccion, 10) || 2));
       const payload = {
         ...formData,
         semestre: parseInt(formData.semestre, 10) || 1,
         creditos: parseInt(formData.creditos, 10) || 0,
-        horas_semanales: parseInt(formData.horas_semanales, 10) || 0,
+        horas_semanales: seccionesGrupo * horasSeccion,
+        secciones_por_grupo: seccionesGrupo,
+        horas_por_seccion: horasSeccion,
         seleccionable: !!formData.seleccionable,
+        tipo: formData.tipo || 'FUNDAMENTAL',
+        num_secciones: parseInt(formData.num_secciones, 10) || 0,
       };
 
       if (asignaturaToEdit) {
+        delete payload.estudiantes_por_seccion;
+        delete payload.secciones;
+        delete payload.id;
         await updateAsignatura(asignaturaToEdit.id, payload);
         setMensaje({ texto: '¡Asignatura actualizada con éxito!', tipo: 'success' });
       } else {
+        payload.estudiantes_por_seccion = parseInt(formData.estudiantes_por_seccion, 10) || 0;
         await createAsignatura(payload);
-        setMensaje({ texto: '¡Asignatura registrada con éxito!', tipo: 'success' });
+        setMensaje({ texto: '¡Asignatura registrada con sus grupos!', tipo: 'success' });
       }
 
       if (onSuccess) {
@@ -111,7 +128,7 @@ export default function AsignaturaForm({ asignaturaToEdit, onSuccess }) {
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Semestre</label>
             <input
@@ -137,17 +154,88 @@ export default function AsignaturaForm({ asignaturaToEdit, onSuccess }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">H. Semanales</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Secciones/semana</label>
             <input
               type="number"
-              name="horas_semanales"
-              value={formData.horas_semanales}
+              name="secciones_por_grupo"
+              min="1"
+              max="10"
+              value={formData.secciones_por_grupo ?? 1}
               onChange={handleChange}
               required
-              placeholder="Ej. 4"
+              placeholder="Ej. 2"
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all"
             />
+            <p className="text-[11px] text-gray-400 mt-1">Sesiones semanales del grupo.</p>
           </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Horas por sección</label>
+            <input
+              type="number"
+              name="horas_por_seccion"
+              min="1"
+              max="3"
+              value={formData.horas_por_seccion ?? 2}
+              onChange={handleChange}
+              required
+              placeholder="Ej. 2"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all"
+            />
+            <p className="text-[11px] text-gray-400 mt-1">Duración de cada sesión (1 a 3 horas).</p>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">Tipo de Materia</label>
+          <select
+            name="tipo"
+            value={formData.tipo || 'FUNDAMENTAL'}
+            onChange={handleChange}
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all bg-white"
+          >
+            <option value="FUNDAMENTAL">Fundamental</option>
+            <option value="ELECTIVA">Electiva</option>
+          </select>
+          <p className="text-[11px] text-gray-400 mt-1">
+            En conflictos de horario del estudiante, se descarta la electiva antes que la fundamental.
+          </p>
+        </div>
+
+        <div className={asignaturaToEdit ? '' : 'grid grid-cols-2 gap-3'}>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Número de grupos</label>
+            <input
+              type="number"
+              name="num_secciones"
+              min={asignaturaToEdit ? 0 : 1}
+              max="20"
+              value={formData.num_secciones ?? 0}
+              onChange={handleChange}
+              required
+              placeholder="Ej. 2"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all"
+            />
+            <p className="text-[11px] text-gray-400 mt-1">
+              {asignaturaToEdit
+                ? 'Al guardar, se agregan o eliminan grupos para igualar este número.'
+                : 'Grupos de la materia (G1, G2, ...).'}
+            </p>
+          </div>
+          {!asignaturaToEdit && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Estudiantes por Sección</label>
+              <input
+                type="number"
+                name="estudiantes_por_seccion"
+                min="0"
+                value={formData.estudiantes_por_seccion}
+                onChange={handleChange}
+                placeholder="Ej. 30"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all"
+              />
+              <p className="text-[11px] text-gray-400 mt-1">Opcional; el Excel de UXXI lo actualiza.</p>
+            </div>
+          )}
         </div>
 
         <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50 cursor-pointer">

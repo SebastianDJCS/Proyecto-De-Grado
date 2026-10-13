@@ -1,0 +1,16 @@
+# Dependencias JS
+node_modules/
+
+# IDEs
+.idea/
+.vscode/
+
+# Builds
+frontend/dist/
+
+# Entornos locales / secrets
+*.env
+.env
+
+# Logs
+*.log

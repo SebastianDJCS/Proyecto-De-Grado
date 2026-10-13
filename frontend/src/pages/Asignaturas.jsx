@@ -114,11 +114,28 @@ export default function Asignaturas() {
                     </span>
                   </div>
                   <h3 className="text-lg font-bold text-gray-900">{asig.nombre}</h3>
-                  {asig.seleccionable && (
-                    <span className="inline-block mt-1 text-[10px] font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                      Disponible para estudiantes
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    <span
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                        (asig.tipo || 'FUNDAMENTAL') === 'ELECTIVA'
+                          ? 'bg-purple-100 text-purple-700'
+                          : 'bg-blue-100 text-blue-700'
+                      }`}
+                    >
+                      {(asig.tipo || 'FUNDAMENTAL') === 'ELECTIVA' ? 'Electiva' : 'Fundamental'}
                     </span>
-                  )}
+                    <span className="text-[10px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                      {asig.secciones ?? 0} grupo(s)
+                    </span>
+                    <span className="text-[10px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                      {asig.secciones_por_grupo ?? 1}×{asig.horas_por_seccion ?? 2}h /grupo
+                    </span>
+                    {asig.seleccionable && (
+                      <span className="text-[10px] font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                        Disponible para estudiantes
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="pt-3 border-t border-gray-200/60 flex items-center justify-between text-xs text-gray-500">

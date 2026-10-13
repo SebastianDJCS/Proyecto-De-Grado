@@ -40,7 +40,33 @@ const calcularEstilosTarjeta = (bloqueHorarioStr) => {
   };
 };
 
+const esAdminItem = (item) =>
+  item.tipo_actividad?.toUpperCase().includes('ADMIN') ||
+  item.tipo?.toUpperCase().includes('ADMIN') ||
+  item.es_administrativa === true ||
+  item.es_administrativa === 1;
+
+// Etiqueta de sesión por grupo: "1/2", "2/2"... para que se vea que varias
+// tarjetas de la misma materia+grupo son UN solo grupo con varias sesiones.
+const calcularEtiquetasSesion = (horarios = []) => {
+  const agrupado = {};
+  horarios.forEach((h) => {
+    if (!h || esAdminItem(h)) return;
+    const key = `${h.asignatura || h.materia || ''}|${h.grupo_codigo || h.grupo || ''}`;
+    if (!agrupado[key]) agrupado[key] = [];
+    agrupado[key].push(h);
+  });
+
+  const etiquetas = new Map();
+  Object.values(agrupado).forEach((lista) => {
+    lista.forEach((h, i) => etiquetas.set(h, `${i + 1}/${lista.length}`));
+  });
+  return etiquetas;
+};
+
 export const MallaHoraria = ({ horarios = [] }) => {
+  const etiquetasSesion = calcularEtiquetasSesion(horarios);
+
   return (
     <div className="overflow-x-auto shadow-md rounded-lg border border-gray-200 bg-white">
       <table className="w-full text-sm text-center text-gray-700 border-collapse">
@@ -100,11 +126,8 @@ export const MallaHoraria = ({ horarios = [] }) => {
                       const estilosPosicion = calcularEstilosTarjeta(bloqueHorario);
 
                       // Detectar si la asignación es una Labor Administrativa
-                      const esAdmin =
-                        item.tipo_actividad?.toUpperCase().includes('ADMIN') ||
-                        item.tipo?.toUpperCase().includes('ADMIN') ||
-                        item.es_administrativa === true ||
-                        item.es_administrativa === 1;
+                      const esAdmin = esAdminItem(item);
+                      const sesion = etiquetasSesion.get(item);
 
                       return (
                         <div
@@ -130,7 +153,9 @@ export const MallaHoraria = ({ horarios = [] }) => {
                                   esAdmin ? 'bg-amber-200 text-amber-800' : 'bg-blue-200 text-blue-800'
                                 }`}
                               >
-                                {esAdmin ? 'ADMIN' : `G: ${item.grupo_codigo || item.grupo || 'N/A'}`}
+                                {esAdmin
+                                  ? 'ADMIN'
+                                  : `G: ${item.grupo_codigo || item.grupo || 'N/A'}${sesion ? ` · ${sesion}` : ''}`}
                               </span>
                               <span className="text-[9px] font-mono text-gray-500">{bloqueHorario}</span>
                             </div>
