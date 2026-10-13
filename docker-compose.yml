@@ -10,9 +10,9 @@ services:
       - ./backend/.env
     environment:
       # Tope de tiempo del solver global (segundos).
-      # 240 < 300 = duración máxima de la function de Vercel que hace de proxy
-      # (/api/* -> Azure), para que la petición nunca muera antes que el solver.
-      SOLVER_MAX_TIME_SECONDS: ${SOLVER_MAX_TIME_SECONDS:-240}
+      # < 120 porque el rewrite externo de Vercel (proxy /api -> Azure) corta
+      # la peticion a los 120 s. El solver tarda ~20 s, sobra margen.
+      SOLVER_MAX_TIME_SECONDS: ${SOLVER_MAX_TIME_SECONDS:-100}
       # Hilos de búsqueda del solver: 0 = usar todos los vCPU disponibles.
       # Pon un número (2, 4...) si quieres limitarlos.
       SOLVER_WORKERS: ${SOLVER_WORKERS:-0}
