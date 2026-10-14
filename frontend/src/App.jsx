@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Menu, CalendarCheck } from 'lucide-react';
 import Sidebar from './components/layout/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Docentes from './pages/Docentes';
@@ -31,12 +33,67 @@ export default function App() {
 function Contenido() {
   const { pathname } = useLocation();
   const enLogin = pathname.replace(/\/+$/, '') === '/login';
+  const [drawerAbierto, setDrawerAbierto] = useState(false);
+  const [sidebarPc, setSidebarPc] = useState(true);
+  const [rutaPrevia, setRutaPrevia] = useState(pathname);
+
+  if (rutaPrevia !== pathname) {
+    setRutaPrevia(pathname);
+    setDrawerAbierto(false);
+  }
+
+  const abrirSidebar = () => {
+    setDrawerAbierto(true);
+    setSidebarPc(true);
+  };
 
   return (
     <div className="flex bg-gray-100 min-h-screen">
       {/* En el login no se muestra la navegacion principal */}
-      {!enLogin && <Sidebar />}
-      <main className={`flex-1 ${enLogin ? '' : 'p-4 md:p-8 overflow-y-auto'}`}>
+      {!enLogin && (
+        <>
+          <Sidebar
+            abierto={drawerAbierto}
+            pcAbierto={sidebarPc}
+            onCerrar={() => setDrawerAbierto(false)}
+            onTogglePc={() => setSidebarPc(false)}
+          />
+
+          {/* Fondo oscuro al abrir el menu en movil */}
+          {drawerAbierto && (
+            <div
+              className="fixed inset-0 z-30 bg-black/40 md:hidden"
+              onClick={() => setDrawerAbierto(false)}
+              aria-hidden="true"
+            />
+          )}
+        </>
+      )}
+      <main
+        className={`flex-1 overflow-y-auto ${
+          enLogin ? '' : `p-4 pt-20 md:px-8 md:pb-8 ${sidebarPc ? 'md:pt-8' : 'md:pt-20'}`
+        }`}
+      >
+        {!enLogin && (
+          <div
+            className={`fixed top-0 left-0 right-0 z-20 flex items-center gap-3 bg-white px-4 py-3 shadow-sm border-b border-gray-200 ${
+              sidebarPc ? 'md:hidden' : ''
+            }`}
+          >
+            <button
+              onClick={abrirSidebar}
+              aria-label="Abrir menú"
+              aria-expanded={!sidebarPc || drawerAbierto}
+              className="text-gray-600 hover:text-orange-600 bg-gray-100 hover:bg-orange-50 p-2 rounded-xl transition-colors cursor-pointer"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-2">
+              <CalendarCheck className="w-5 h-5 text-orange-600" />
+              <span className="font-extrabold text-gray-900">Optimizador</span>
+            </div>
+          </div>
+        )}
         <Routes>
           <Route path="/login" element={<LoginPage />} />
 
