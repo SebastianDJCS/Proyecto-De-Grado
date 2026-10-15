@@ -34,7 +34,8 @@ function Contenido() {
   const { pathname } = useLocation();
   const enLogin = pathname.replace(/\/+$/, '') === '/login';
   const [drawerAbierto, setDrawerAbierto] = useState(false);
-  const [sidebarPc, setSidebarPc] = useState(true);
+  // Recordar si la barra lateral quedo colapsada (mini-barra)
+  const [sidebarPc, setSidebarPc] = useState(() => localStorage.getItem('sidebarColapsado') !== '1');
   const [rutaPrevia, setRutaPrevia] = useState(pathname);
 
   if (rutaPrevia !== pathname) {
@@ -42,9 +43,16 @@ function Contenido() {
     setDrawerAbierto(false);
   }
 
+  const aplicarPc = (nuevoAbierto) => {
+    setSidebarPc(nuevoAbierto);
+    localStorage.setItem('sidebarColapsado', nuevoAbierto ? '0' : '1');
+  };
+
+  const alternarPc = () => aplicarPc(!sidebarPc);
+
   const abrirSidebar = () => {
     setDrawerAbierto(true);
-    setSidebarPc(true);
+    aplicarPc(true);
   };
 
   return (
@@ -56,7 +64,7 @@ function Contenido() {
             abierto={drawerAbierto}
             pcAbierto={sidebarPc}
             onCerrar={() => setDrawerAbierto(false)}
-            onTogglePc={() => setSidebarPc(false)}
+            onTogglePc={alternarPc}
           />
 
           {/* Fondo oscuro al abrir el menu en movil */}
@@ -70,20 +78,14 @@ function Contenido() {
         </>
       )}
       <main
-        className={`flex-1 overflow-y-auto ${
-          enLogin ? '' : `p-4 pt-20 md:px-8 md:pb-8 ${sidebarPc ? 'md:pt-8' : 'md:pt-20'}`
-        }`}
+        className={`flex-1 overflow-y-auto ${enLogin ? '' : 'p-4 pt-20 md:px-8 md:pb-8 md:pt-8'}`}
       >
         {!enLogin && (
-          <div
-            className={`fixed top-0 left-0 right-0 z-20 flex items-center gap-3 bg-white px-4 py-3 shadow-sm border-b border-gray-200 ${
-              sidebarPc ? 'md:hidden' : ''
-            }`}
-          >
+          <div className="fixed top-0 left-0 right-0 z-20 flex items-center gap-3 bg-white px-4 py-3 shadow-sm border-b border-gray-200 md:hidden">
             <button
               onClick={abrirSidebar}
               aria-label="Abrir menú"
-              aria-expanded={!sidebarPc || drawerAbierto}
+              aria-expanded={drawerAbierto}
               className="text-gray-600 hover:text-orange-600 bg-gray-100 hover:bg-orange-50 p-2 rounded-xl transition-colors cursor-pointer"
             >
               <Menu className="w-5 h-5" />
