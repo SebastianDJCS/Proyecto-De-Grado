@@ -3,7 +3,7 @@ name: Continuous Deployment to Azure
 on:
   push:
     branches:
-      - main  # Cambia 'main' por 'master' si tu rama principal se llama master
+      - main
 
 jobs:
   deploy:
@@ -18,14 +18,14 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            # 1. Ir a la carpeta del proyecto en la VM (ajusta la ruta si se llama distinto)
-            cd ~/uctp || cd ~/app/backend
+            # 1. Entrar a la carpeta exacta en la VM
+            cd ~/Proyecto-De-Grado
             
-            # 2. Traer los cambios más recientes del repositorio
+            # 2. Descargar los cambios más recientes de GitHub
             git pull origin main
             
             # 3. Reconstruir e iniciar los contenedores
             docker compose up -d --build
             
-            # 4. Limpiar imágenes de Docker en desuso para ahorrar espacio
+            # 4. Limpiar imágenes antiguas para liberar espacio
             docker image prune -f
