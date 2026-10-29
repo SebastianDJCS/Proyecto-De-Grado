@@ -14,6 +14,11 @@ __pycache__/
 _server.log
 _server.log.err
 
+# Base de datos local de desarrollo
+*.db
+*.sqlite
+*.sqlite3
+
 # IDEs
 .vscode/
 .idea/

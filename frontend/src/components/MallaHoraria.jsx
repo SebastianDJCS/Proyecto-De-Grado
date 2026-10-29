@@ -1,9 +1,11 @@
+import { MapPin, User } from 'lucide-react';
+
 const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
 // Horas base de referencia para las líneas de la tabla (cada hora = una franja de altura fija)
 const HORAS_BASE = [
-  '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', 
-  '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', 
+  '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
+  '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
   '18:00', '19:00', '20:00', '21:00', '22:00'
 ];
 
@@ -68,30 +70,33 @@ export const MallaHoraria = ({ horarios = [] }) => {
   const etiquetasSesion = calcularEtiquetasSesion(horarios);
 
   return (
-    <div className="overflow-x-auto shadow-md rounded-lg border border-gray-200 bg-white">
-      <table className="w-full text-sm text-center text-gray-700 border-collapse">
-        {/* Encabezados con los Días */}
-        <thead className="bg-gray-800 text-white uppercase text-xs sticky top-0 z-20">
+    <div className="overflow-x-auto rounded-md border border-line bg-surface">
+      <table className="w-full border-collapse text-center text-sm text-ink">
+        <thead className="sticky top-0 z-20 bg-ink text-white">
           <tr>
-            <th className="py-3 px-4 border w-24">Hora</th>
+            <th className="w-20 border-r border-white/10 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-[0.14em]">
+              Hora
+            </th>
             {DIAS.map((dia) => (
-              <th key={dia} className="py-3 px-4 border w-1/6">
+              <th
+                key={dia}
+                className="w-1/6 border-r border-white/10 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] last:border-r-0"
+              >
                 {dia}
               </th>
             ))}
           </tr>
         </thead>
 
-        {/* Cuerpo de la tabla */}
         <tbody>
           <tr>
             {/* Columna fija con las horas base de referencia */}
-            <td className="p-0 border bg-gray-50 align-top">
+            <td className="border-r border-line bg-canvas/60 p-0 align-top">
               {HORAS_BASE.map((hora) => (
-                <div 
-                  key={hora} 
-                  style={{ height: `${ALTURA_PIXELES_POR_HORA}px` }} 
-                  className="border-b text-xs font-semibold text-gray-500 text-right pr-2 pt-1"
+                <div
+                  key={hora}
+                  style={{ height: `${ALTURA_PIXELES_POR_HORA}px` }}
+                  className="tabular border-b border-line pr-2 pt-1 text-right font-mono text-[10px] text-faint"
                 >
                   {hora}
                 </div>
@@ -107,14 +112,14 @@ export const MallaHoraria = ({ horarios = [] }) => {
               });
 
               return (
-                <td key={dia} className="border p-0 relative align-top">
+                <td key={dia} className="relative border-r border-line p-0 align-top last:border-r-0">
                   {/* Fondo con líneas punteadas guía por cada hora */}
-                  <div className="absolute inset-0 pointer-events-none">
+                  <div className="pointer-events-none absolute inset-0">
                     {HORAS_BASE.map((hora) => (
-                      <div 
-                        key={hora} 
-                        style={{ height: `${ALTURA_PIXELES_POR_HORA}px` }} 
-                        className="border-b border-dashed border-gray-100"
+                      <div
+                        key={hora}
+                        style={{ height: `${ALTURA_PIXELES_POR_HORA}px` }}
+                        className="border-b border-dashed border-line/70"
                       ></div>
                     ))}
                   </div>
@@ -128,6 +133,7 @@ export const MallaHoraria = ({ horarios = [] }) => {
                       // Detectar si la asignación es una Labor Administrativa
                       const esAdmin = esAdminItem(item);
                       const sesion = etiquetasSesion.get(item);
+                      const secundario = esAdmin ? 'text-[#7a6535]' : 'text-muted';
 
                       return (
                         <div
@@ -139,37 +145,47 @@ export const MallaHoraria = ({ horarios = [] }) => {
                             right: '2px',
                             position: 'absolute'
                           }}
-                          className={`p-1.5 rounded-md text-left text-xs flex flex-col justify-between border shadow-sm overflow-hidden transition-all hover:z-30 hover:shadow-md ${
+                          className={`flex flex-col justify-between overflow-hidden rounded-sm border border-l-2 p-1.5 text-left text-[11px] shadow-sm transition-shadow hover:z-30 hover:shadow-md ${
                             esAdmin
-                              ? 'bg-amber-50 border-amber-300 text-amber-900'
-                              : 'bg-blue-50 border-blue-300 text-blue-900'
+                              ? 'border-[#e0d3ae] border-l-[#b58a2c] bg-[#fbf6e9] text-[#5f4b1a]'
+                              : 'border-brand-200 border-l-brand-600 bg-brand-50 text-ink'
                           }`}
                         >
                           <div className="overflow-hidden">
                             {/* Badge de Categoría y Horario exacto */}
-                            <div className="flex justify-between items-center mb-0.5">
+                            <div className="mb-0.5 flex items-center justify-between gap-1">
                               <span
-                                className={`inline-block px-1.5 py-0.2 text-[9px] font-bold rounded ${
-                                  esAdmin ? 'bg-amber-200 text-amber-800' : 'bg-blue-200 text-blue-800'
+                                className={`inline-block rounded-sm px-1 py-px text-[9px] font-semibold uppercase tracking-[0.06em] ${
+                                  esAdmin
+                                    ? 'bg-[#e0d3ae] text-[#5f4b1a]'
+                                    : 'bg-brand-200 text-brand-900'
                                 }`}
                               >
                                 {esAdmin
-                                  ? 'ADMIN'
+                                  ? 'Admin'
                                   : `G: ${item.grupo_codigo || item.grupo || 'N/A'}${sesion ? ` · ${sesion}` : ''}`}
                               </span>
-                              <span className="text-[9px] font-mono text-gray-500">{bloqueHorario}</span>
+                              <span className={`tabular shrink-0 font-mono text-[9px] ${secundario}`}>
+                                {bloqueHorario}
+                              </span>
                             </div>
 
-                            <p className="font-bold leading-tight truncate">
+                            <p className="truncate font-semibold leading-tight">
                               {esAdmin
-                                ? item.actividad || item.asignatura || 'Labor Administrativa'
+                                ? item.actividad || item.asignatura || 'Labor administrativa'
                                 : item.asignatura || item.materia}
                             </p>
                           </div>
 
-                          <div className="text-[10px] text-gray-600 pt-0.5 border-t border-gray-200/60 truncate">
-                            <p className="truncate">📍 {item.salon_nombre || item.salon || 'Sin salón'}</p>
-                            <p className="truncate">👨‍🏫 {item.docente_nombre || item.docente || 'N/A'}</p>
+                          <div className={`border-t pt-0.5 text-[10px] ${esAdmin ? 'border-[#e0d3ae]' : 'border-brand-200'} ${secundario}`}>
+                            <p className="flex items-center gap-1 truncate">
+                              <MapPin className="h-2.5 w-2.5 shrink-0" />
+                              <span className="truncate">{item.salon_nombre || item.salon || 'Sin salón'}</span>
+                            </p>
+                            <p className="flex items-center gap-1 truncate">
+                              <User className="h-2.5 w-2.5 shrink-0" />
+                              <span className="truncate">{item.docente_nombre || item.docente || 'N/A'}</span>
+                            </p>
                           </div>
                         </div>
                       );

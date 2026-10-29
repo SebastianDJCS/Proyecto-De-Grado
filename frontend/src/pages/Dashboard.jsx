@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { MallaHoraria } from '../components/MallaHoraria';
 import { resolverHorarios, getHorarioDocente } from '../services/api';
-import { Play, Search, Calendar, User, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Play, Search, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { PageHeader, Button, Badge, Alert, fieldClass, labelClass } from '../components/ui';
 
 export default function Dashboard() {
   // Estados para el Solver
@@ -66,140 +67,134 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Encabezado Principal */}
-      <header className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 flex items-center gap-3">
-          <Calendar className="text-orange-600 w-8 h-8" />
-          Sistema de Optimización de Horarios Académicos
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Panel de Administración y Consulta de Mallas Horarias (Docentes & Horas Administrativas)
-        </p>
-      </header>
+    <div className="mx-auto max-w-7xl">
+      <PageHeader
+        kicker="Panel general"
+        title="Optimización de horarios académicos"
+        description="Ejecuta el motor global y consulta las mallas horarias de docentes y horas administrativas."
+        actions={<Badge tone="ink">CP-SAT · Global</Badge>}
+      />
 
-      {/* Panel Superior: Acciones / Formularios */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        {/* Card 1: Control del Solver Global */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
-              <Play className="text-orange-600 w-5 h-5" />
-              Ejecutar Motor CP-SAT (Global)
-            </h2>
-            <p className="text-xs text-gray-500 mb-6">
-              El motor procesará toda la base de datos de forma global para asegurar cero cruces de horarios entre docentes, salones y semestres.
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <section className="flex flex-col rounded-lg border border-line bg-surface">
+          <div className="border-b border-line px-5 py-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-700">
+              Motor de optimización
+            </p>
+            <h2 className="mt-1 font-serif text-xl text-ink">Generar horarios globales</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted">
+              Procesa toda la base de datos para asegurar cero cruces entre docentes, salones y
+              semestres.
             </p>
           </div>
 
-          <form onSubmit={handleEjecutarSolver} className="space-y-4">
-            <button
-              type="submit"
-              disabled={loadingSolver}
-              className="w-full py-3 px-4 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg shadow transition duration-150 disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {loadingSolver ? (
-                <span>Optimizando recursos globalmente...</span>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 fill-current" />
-                  Generar Horarios Globales
-                </>
-              )}
-            </button>
-          </form>
+          <div className="flex flex-1 flex-col justify-between gap-4 px-5 py-5">
+            <form onSubmit={handleEjecutarSolver}>
+              <Button type="submit" disabled={loadingSolver} className="w-full py-2.5">
+                {loadingSolver ? (
+                  'Optimizando recursos…'
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 fill-current" />
+                    Generar horarios globales
+                  </>
+                )}
+              </Button>
+            </form>
 
-          {/* Mensaje de Estado del Solver */}
-          {mensajeSolver && (
-            <div
-              className={`mt-4 p-3 rounded-lg text-xs flex items-center gap-2 ${
-                mensajeSolver.tipo === 'exito'
-                  ? 'bg-green-50 text-green-800 border border-green-200'
-                  : 'bg-red-50 text-red-800 border border-red-200'
-              }`}
-            >
-              {mensajeSolver.tipo === 'exito' ? (
-                <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
-              ) : (
-                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-              )}
-              <span>{mensajeSolver.texto}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Card 2: Consulta por Docente */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <User className="text-orange-600 w-5 h-5" />
-            Consultar Horario de Docente
-          </h2>
-          <form onSubmit={handleBuscarDocente} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold uppercase text-gray-600 mb-1">
-                Identificación / Cédula del Docente
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Ej. 1098765432"
-                  value={docenteId}
-                  onChange={(e) => setDocenteId(e.target.value)}
-                  className="w-full p-2.5 pl-10 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
-                />
-                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loadingConsulta || !docenteId.trim()}
-              className="w-full py-2.5 px-4 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg shadow transition duration-150 disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {loadingConsulta ? 'Buscando...' : 'Buscar Malla Horaria'}
-            </button>
-          </form>
-
-          {errorConsulta && (
-            <p className="mt-4 text-xs text-red-600 bg-red-50 p-2.5 rounded border border-red-200">
-              {errorConsulta}
-            </p>
-          )}
-        </div>
-
-      </div>
-
-      {/* Sección Inferior: Grilla Malla Horaria */}
-      <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">Malla Horaria Semanal</h2>
-            {horarios.length > 0 && (
-              <p className="text-sm text-gray-500">
-                Mostrando horarios asignados a:{' '}
-                <span className="font-semibold text-gray-800">
-                  {horarios[0]?.docente_nombre || 'Docente'}
+            {mensajeSolver && (
+              <Alert tone={mensajeSolver.tipo === 'exito' ? 'success' : 'danger'}>
+                <span className="flex items-start gap-2">
+                  {mensajeSolver.tipo === 'exito' ? (
+                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                  )}
+                  <span>{mensajeSolver.texto}</span>
                 </span>
-              </p>
+              </Alert>
             )}
           </div>
+        </section>
 
-          {/* Leyenda de Colores */}
-          <div className="flex items-center gap-4 text-xs">
-            <div className="flex items-center gap-1.5">
-              <span className="w-3.5 h-3.5 bg-orange-100 border border-orange-400 rounded"></span>
-              <span className="text-gray-600">Clase / Asignatura</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-3.5 h-3.5 bg-amber-100 border border-amber-400 rounded"></span>
-              <span className="text-gray-600">Labor Administrativa</span>
-            </div>
+        <section className="flex flex-col rounded-lg border border-line bg-surface">
+          <div className="border-b border-line px-5 py-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-700">
+              Consulta
+            </p>
+            <h2 className="mt-1 font-serif text-xl text-ink">Horario de un docente</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted">
+              Ingresa la identificación para ver la malla asignada y sus horas administrativas.
+            </p>
+          </div>
+
+          <div className="flex flex-1 flex-col gap-4 px-5 py-5">
+            <form onSubmit={handleBuscarDocente} className="space-y-3">
+              <div>
+                <label htmlFor="docente-id" className={labelClass}>
+                  Identificación / cédula
+                </label>
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
+                  <input
+                    id="docente-id"
+                    type="text"
+                    placeholder="Ej. 1098765432"
+                    value={docenteId}
+                    onChange={(e) => setDocenteId(e.target.value)}
+                    className={`${fieldClass} pl-9`}
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                variant="secondary"
+                disabled={loadingConsulta || !docenteId.trim()}
+                className="w-full"
+              >
+                {loadingConsulta ? 'Buscando…' : 'Buscar malla horaria'}
+              </Button>
+            </form>
+
+            {errorConsulta && <Alert tone="danger">{errorConsulta}</Alert>}
+          </div>
+        </section>
+      </div>
+
+      <section className="mt-5 rounded-lg border border-line bg-surface">
+        <div className="flex flex-col gap-4 border-b border-line px-5 py-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="font-serif text-xl text-ink">Malla horaria semanal</h2>
+            <p className="mt-1 text-sm text-muted">
+              {horarios.length > 0 ? (
+                <>
+                  Mostrando horarios de{' '}
+                  <span className="font-semibold text-ink">
+                    {horarios[0]?.docente_nombre || 'Docente'}
+                  </span>
+                </>
+              ) : (
+                'Selecciona un docente para visualizar su programación.'
+              )}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4 text-xs text-muted">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded-sm border border-brand-300 bg-brand-100" />
+              Clase / asignatura
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded-sm border border-[#d9c9a0] bg-[#fbf6e9]" />
+              Labor administrativa
+            </span>
           </div>
         </div>
 
-        {/* Componente Grilla */}
-        <MallaHoraria horarios={horarios} />
+        <div className="p-4">
+          <MallaHoraria horarios={horarios} />
+        </div>
       </section>
     </div>
   );

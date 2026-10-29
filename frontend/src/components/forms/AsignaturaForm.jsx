@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { BookOpen, Save, Loader2 } from 'lucide-react';
+import { Save, Loader2 } from 'lucide-react';
 import { createAsignatura, updateAsignatura } from '../../services/api';
+import { Alert, fieldClass, labelClass } from '../ui';
 
 export default function AsignaturaForm({ asignaturaToEdit, onSuccess }) {
   const [formData, setFormData] = useState(() =>
@@ -78,84 +79,88 @@ export default function AsignaturaForm({ asignaturaToEdit, onSuccess }) {
   };
 
   return (
-    <div className="max-w-xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-        <div className="bg-orange-100 p-3 rounded-xl text-orange-600">
-          <BookOpen className="w-6 h-6" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">
-            {asignaturaToEdit ? 'Editar Asignatura' : 'Registrar Nueva Asignatura'}
-          </h2>
-          <p className="text-sm text-gray-500">
-            {asignaturaToEdit ? `Modificando ${asignaturaToEdit.nombre}` : 'Añade materias correspondientes al plan de estudio.'}
-          </p>
-        </div>
+    <div className="p-6 sm:p-8">
+      <div className="mb-6 border-b border-line pb-5 pr-10">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
+          {asignaturaToEdit ? 'Edición' : 'Registro'}
+        </p>
+        <h2 className="mt-1 font-serif text-2xl text-ink">
+          {asignaturaToEdit ? 'Editar asignatura' : 'Nueva asignatura'}
+        </h2>
+        <p className="mt-1.5 text-sm text-muted">
+          {asignaturaToEdit
+            ? `Modificando ${asignaturaToEdit.nombre}.`
+            : 'Añade materias correspondientes al plan de estudio.'}
+        </p>
       </div>
 
       {mensaje.texto && (
-        <div className={`mb-6 p-4 rounded-xl text-sm font-medium ${
-          mensaje.tipo === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
-        }`}>
+        <Alert tone={mensaje.tipo === 'success' ? 'success' : 'danger'} className="mb-5">
           {mensaje.texto}
-        </div>
+        </Alert>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Código UCCD</label>
-          <input
-            type="text"
-            name="codigo_uccd"
-            value={formData.codigo_uccd}
-            onChange={handleChange}
-            required
-            placeholder="Ej. MAT-101"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Nombre de la Asignatura</label>
-          <input
-            type="text"
-            name="nombre"
-            value={formData.nombre}
-            onChange={handleChange}
-            required
-            placeholder="Ej. Cálculo I"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Semestre</label>
+            <label htmlFor="asig-codigo" className={labelClass}>Código UCCD</label>
             <input
+              id="asig-codigo"
+              type="text"
+              name="codigo_uccd"
+              value={formData.codigo_uccd}
+              onChange={handleChange}
+              required
+              placeholder="Ej. MAT-101"
+              className={fieldClass}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label htmlFor="asig-nombre" className={labelClass}>Nombre</label>
+            <input
+              id="asig-nombre"
+              type="text"
+              name="nombre"
+              value={formData.nombre}
+              onChange={handleChange}
+              required
+              placeholder="Ej. Cálculo I"
+              className={fieldClass}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div>
+            <label htmlFor="asig-semestre" className={labelClass}>Semestre</label>
+            <input
+              id="asig-semestre"
               type="number"
               name="semestre"
               value={formData.semestre}
               onChange={handleChange}
               required
-              placeholder="Ej. 1"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all"
+              placeholder="1"
+              className={fieldClass}
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Créditos</label>
+            <label htmlFor="asig-creditos" className={labelClass}>Créditos</label>
             <input
+              id="asig-creditos"
               type="number"
               name="creditos"
               value={formData.creditos}
               onChange={handleChange}
               required
-              placeholder="Ej. 4"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all"
+              placeholder="4"
+              className={fieldClass}
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Secciones/semana</label>
+            <label htmlFor="asig-secciones-grupo" className={labelClass}>Secciones/sem.</label>
             <input
+              id="asig-secciones-grupo"
               type="number"
               name="secciones_por_grupo"
               min="1"
@@ -163,14 +168,14 @@ export default function AsignaturaForm({ asignaturaToEdit, onSuccess }) {
               value={formData.secciones_por_grupo ?? 1}
               onChange={handleChange}
               required
-              placeholder="Ej. 2"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all"
+              placeholder="2"
+              className={fieldClass}
             />
-            <p className="text-[11px] text-gray-400 mt-1">Sesiones semanales del grupo.</p>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Horas por sección</label>
+            <label htmlFor="asig-horas-seccion" className={labelClass}>Horas/sección</label>
             <input
+              id="asig-horas-seccion"
               type="number"
               name="horas_por_seccion"
               min="1"
@@ -178,33 +183,37 @@ export default function AsignaturaForm({ asignaturaToEdit, onSuccess }) {
               value={formData.horas_por_seccion ?? 2}
               onChange={handleChange}
               required
-              placeholder="Ej. 2"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all"
+              placeholder="2"
+              className={fieldClass}
             />
-            <p className="text-[11px] text-gray-400 mt-1">Duración de cada sesión (1 a 3 horas).</p>
           </div>
         </div>
+        <p className="-mt-1 text-[11px] text-faint">
+          Sesiones semanales del grupo y duración de cada sesión (1 a 3 horas).
+        </p>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Tipo de Materia</label>
+          <label htmlFor="asig-tipo" className={labelClass}>Tipo de materia</label>
           <select
+            id="asig-tipo"
             name="tipo"
             value={formData.tipo || 'FUNDAMENTAL'}
             onChange={handleChange}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all bg-white"
+            className={fieldClass}
           >
             <option value="FUNDAMENTAL">Fundamental</option>
             <option value="ELECTIVA">Electiva</option>
           </select>
-          <p className="text-[11px] text-gray-400 mt-1">
+          <p className="mt-1.5 text-[11px] text-faint">
             En conflictos de horario del estudiante, se descarta la electiva antes que la fundamental.
           </p>
         </div>
 
-        <div className={asignaturaToEdit ? '' : 'grid grid-cols-2 gap-3'}>
+        <div className={asignaturaToEdit ? '' : 'grid grid-cols-1 gap-4 sm:grid-cols-2'}>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Número de grupos</label>
+            <label htmlFor="asig-num-secciones" className={labelClass}>Número de grupos</label>
             <input
+              id="asig-num-secciones"
               type="number"
               name="num_secciones"
               min={asignaturaToEdit ? 0 : 1}
@@ -212,59 +221,60 @@ export default function AsignaturaForm({ asignaturaToEdit, onSuccess }) {
               value={formData.num_secciones ?? 0}
               onChange={handleChange}
               required
-              placeholder="Ej. 2"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all"
+              placeholder="2"
+              className={fieldClass}
             />
-            <p className="text-[11px] text-gray-400 mt-1">
+            <p className="mt-1.5 text-[11px] text-faint">
               {asignaturaToEdit
                 ? 'Al guardar, se agregan o eliminan grupos para igualar este número.'
-                : 'Grupos de la materia (G1, G2, ...).'}
+                : 'Grupos de la materia (G1, G2, …).'}
             </p>
           </div>
           {!asignaturaToEdit && (
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Estudiantes por Sección</label>
+              <label htmlFor="asig-estudiantes" className={labelClass}>Estudiantes por sección</label>
               <input
+                id="asig-estudiantes"
                 type="number"
                 name="estudiantes_por_seccion"
                 min="0"
                 value={formData.estudiantes_por_seccion}
                 onChange={handleChange}
                 placeholder="Ej. 30"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all"
+                className={fieldClass}
               />
-              <p className="text-[11px] text-gray-400 mt-1">Opcional; el Excel de UXXI lo actualiza.</p>
+              <p className="mt-1.5 text-[11px] text-faint">Opcional; el Excel de UXXI lo actualiza.</p>
             </div>
           )}
         </div>
 
-        <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50 cursor-pointer">
+        <label className="flex cursor-pointer items-start gap-3 rounded-md border border-line bg-canvas/60 p-3">
           <input
             type="checkbox"
             name="seleccionable"
             checked={!!formData.seleccionable}
             onChange={handleChange}
-            className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
+            className="mt-0.5 h-4 w-4 rounded-sm border-line-strong accent-brand-600"
           />
-          <span className="text-sm text-gray-700">
-            Disponible para que los estudiantes la elijan en <strong>Mi Horario</strong>
+          <span className="text-sm text-ink">
+            Disponible para que los estudiantes la elijan en <strong className="font-semibold">Mi horario</strong>
           </span>
         </label>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full mt-2 bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-4 rounded-xl shadow-md shadow-orange-600/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-md border border-brand-700 bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:border-brand-800 hover:bg-brand-800 disabled:opacity-50"
         >
           {loading ? (
             <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Guardando...</span>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Guardando…</span>
             </>
           ) : (
             <>
-              <Save className="w-5 h-5" />
-              <span>{asignaturaToEdit ? 'Actualizar Asignatura' : 'Guardar Asignatura'}</span>
+              <Save className="h-4 w-4" />
+              <span>{asignaturaToEdit ? 'Actualizar asignatura' : 'Guardar asignatura'}</span>
             </>
           )}
         </button>

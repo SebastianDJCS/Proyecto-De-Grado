@@ -1,1 +1,70 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-brand-50: #fdf4ed;
+  --color-brand-100: #fae4d2;
+  --color-brand-200: #f4c5a3;
+  --color-brand-300: #ec9e6b;
+  --color-brand-400: #e1773d;
+  --color-brand-500: #d65d22;
+  --color-brand-600: #c2410c;
+  --color-brand-700: #9d350c;
+  --color-brand-800: #7d2c0d;
+  --color-brand-900: #65260e;
+
+  --color-ink: #1c1f23;
+  --color-ink-soft: #2a2e33;
+  --color-canvas: #f5f4f1;
+  --color-surface: #ffffff;
+  --color-line: #dedbd4;
+  --color-line-strong: #c9c5bc;
+  --color-muted: #666b72;
+  --color-faint: #9298a0;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-200);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}

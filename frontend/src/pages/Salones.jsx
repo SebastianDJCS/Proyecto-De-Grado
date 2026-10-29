@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
-import { DoorOpen, Plus, Search, X, Building, Users, Edit2, Trash2 } from 'lucide-react';
+import { DoorOpen, Plus, Search, Building, Users, Edit2, Trash2 } from 'lucide-react';
 import SalonForm from '../components/forms/SalonForm';
 import { getSalones, deleteSalon } from '../services/api';
+import { PageHeader, Button, IconButton, Badge, EmptyState, Modal, fieldClass } from '../components/ui';
 
 export default function Salones() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [salones, setSalones] = useState([]);
   const [busqueda, setBusqueda] = useState('');
   const [loadingList, setLoadingList] = useState(true);
-  const [salonAEditar, setSalonAEditar] = useState(null); // Estado para saber qué salón se va a editar
+  const [salonAEditar, setSalonAEditar] = useState(null);
 
-  // Función para obtener los salones del backend
   const fetchSalones = async () => {
     try {
       setLoadingList(true);
@@ -23,7 +23,6 @@ export default function Salones() {
     }
   };
 
-  // Cargar salones al abrir la página
   useEffect(() => {
     let activo = true;
     getSalones()
@@ -42,32 +41,28 @@ export default function Salones() {
     };
   }, []);
 
-  // Función que se ejecuta cuando se crea o edita un salón con éxito
   const handleFormSuccess = () => {
-    setIsModalOpen(false); // Cierra el modal
-    setSalonAEditar(null); // Limpia la selección de edición
-    setSalones([]); // Limpia la lista de salones
-    fetchSalones(); // Recarga la lista de abajo automáticamente
+    setIsModalOpen(false);
+    setSalonAEditar(null);
+    setSalones([]);
+    fetchSalones();
   };
 
-  // Abrir modal para crear nuevo salón
   const handleOpenCreate = () => {
     setSalonAEditar(null);
     setIsModalOpen(true);
   };
 
-  // Abrir modal para editar un salón existente
   const handleOpenEdit = (salon) => {
     setSalonAEditar(salon);
     setIsModalOpen(true);
   };
 
-  // Función para eliminar un salón
   const handleDelete = async (id) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este salón?')) {
       try {
         await deleteSalon(id);
-        fetchSalones(); // Recarga la lista tras eliminar
+        fetchSalones();
       } catch (error) {
         console.error('Error al eliminar el salón:', error);
         alert('No se pudo eliminar el salón.');
@@ -75,7 +70,6 @@ export default function Salones() {
     }
   };
 
-  // Filtrar salones según el buscador
   const salonesFiltrados = salones.filter(
     (salon) =>
       salon.sede.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -84,126 +78,138 @@ export default function Salones() {
   );
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Cabecera de la sección */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold text-gray-900 flex items-center gap-3">
-            <DoorOpen className="text-orange-600 w-7 h-7" />
-            Salones y Espacios
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Administra la capacidad de los espacios físicos, laboratorios y aulas disponibles.
-          </p>
-        </div>
+    <div className="mx-auto max-w-7xl">
+      <PageHeader
+        kicker="Infraestructura"
+        title="Salones y espacios"
+        description="Administra las aulas, laboratorios y auditorios disponibles, su sede y capacidad."
+        actions={
+          <Button onClick={handleOpenCreate}>
+            <Plus className="h-4 w-4" />
+            Nuevo salón
+          </Button>
+        }
+      />
 
-        <button 
-          onClick={handleOpenCreate}
-          className="bg-orange-600 hover:bg-orange-700 text-white font-medium px-4 py-2.5 rounded-lg text-sm shadow transition flex items-center gap-2 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          Nuevo Salón
-        </button>
-      </div>
-
-      {/* Buscador */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-        <div className="relative flex-1">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full sm:max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
           <input
             type="text"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar por sede, nomenclatura o nombre..."
-            className="w-full p-2.5 pl-10 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
+            placeholder="Buscar por sede, nomenclatura o nombre"
+            className={`${fieldClass} pl-9`}
           />
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
         </div>
+        <p className="text-xs text-muted">
+          <span className="tabular font-semibold text-ink">{salonesFiltrados.length}</span> de{' '}
+          <span className="tabular">{salones.length}</span> espacios
+        </p>
       </div>
 
-      {/* Lista / Tarjetas de Salones */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden p-6">
+      <div className="overflow-hidden rounded-lg border border-line bg-surface">
         {loadingList ? (
-          <div className="text-center py-12 text-gray-400 text-sm">Cargando salones desde la base de datos...</div>
+          <div className="px-5 py-12 text-center text-sm text-muted">Cargando salones…</div>
         ) : salonesFiltrados.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 text-sm">
-            No hay salones registrados o no coinciden con la búsqueda.
-          </div>
+          <EmptyState
+            icon={DoorOpen}
+            title="No hay salones registrados"
+            description="Registra el primer espacio para que el motor pueda asignar clases."
+          />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {salonesFiltrados.map((salon) => (
-              <div 
-                key={salon.id} 
-                className="p-5 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-orange-50/30 transition-all shadow-xs flex flex-col justify-between gap-4"
-              >
-                <div>
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2.5 py-1 rounded-md uppercase tracking-wide">
-                      {salon.tipo}
-                    </span>
-                    <span className="text-xs font-semibold text-gray-500 flex items-center gap-1">
-                      <Users className="w-3.5 h-3.5" /> {salon.capacidad} est.
-                    </span>
-                  </div>
-                  
-                  <h3 className="text-lg font-bold text-gray-900">{salon.nomenclatura}</h3>
-                  {salon.nombre && (
-                    <p className="text-xs font-medium text-gray-600 mt-0.5">{salon.nombre}</p>
-                  )}
-                </div>
+          <>
+            <div className="hidden md:block">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-line bg-canvas/70">
+                  <tr className="text-[10px] uppercase tracking-[0.14em] text-muted">
+                    <th className="px-4 py-3 font-semibold">Espacio</th>
+                    <th className="px-4 py-3 font-semibold">Tipo</th>
+                    <th className="px-4 py-3 font-semibold">Sede</th>
+                    <th className="px-4 py-3 text-right font-semibold">Capacidad</th>
+                    <th className="px-4 py-3 text-right font-semibold">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {salonesFiltrados.map((salon) => (
+                    <tr key={salon.id} className="transition-colors hover:bg-canvas/60">
+                      <td className="px-4 py-3">
+                        <p className="font-semibold text-ink">{salon.nomenclatura}</p>
+                        {salon.nombre && <p className="text-xs text-muted">{salon.nombre}</p>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge tone={salon.tipo === 'LABORATORIO' ? 'brand' : 'neutral'}>
+                          {salon.tipo}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-muted">
+                        <span className="inline-flex items-center gap-1.5">
+                          <Building className="h-3.5 w-3.5 text-faint" />
+                          {salon.sede}
+                        </span>
+                      </td>
+                      <td className="tabular px-4 py-3 text-right text-ink">
+                        <span className="inline-flex items-center gap-1.5">
+                          <Users className="h-3.5 w-3.5 text-faint" />
+                          {salon.capacidad}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <IconButton label="Editar salón" onClick={() => handleOpenEdit(salon)}>
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </IconButton>
+                          <IconButton label="Eliminar salón" tone="danger" onClick={() => handleDelete(salon.id)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </IconButton>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-                <div className="pt-3 border-t border-gray-200/60 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <Building className="w-3.5 h-3.5 text-gray-400" />
-                    <span>Sede: <strong className="text-gray-700">{salon.sede}</strong></span>
+            <ul className="divide-y divide-line md:hidden">
+              {salonesFiltrados.map((salon) => (
+                <li key={salon.id} className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-ink">{salon.nomenclatura}</p>
+                        <Badge tone={salon.tipo === 'LABORATORIO' ? 'brand' : 'neutral'}>
+                          {salon.tipo}
+                        </Badge>
+                      </div>
+                      {salon.nombre && <p className="mt-0.5 truncate text-xs text-muted">{salon.nombre}</p>}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <IconButton label="Editar salón" onClick={() => handleOpenEdit(salon)}>
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </IconButton>
+                      <IconButton label="Eliminar salón" tone="danger" onClick={() => handleDelete(salon.id)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </IconButton>
+                    </div>
                   </div>
-
-                  {/* Botones de Editar y Eliminar */}
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleOpenEdit(salon)}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
-                      title="Editar salón"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(salon.id)}
-                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                      title="Eliminar salón"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                  <div className="mt-3 flex gap-4 border-t border-line pt-2.5 text-xs text-muted">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Building className="h-3.5 w-3.5 text-faint" /> {salon.sede}
+                    </span>
+                    <span className="tabular inline-flex items-center gap-1.5">
+                      <Users className="h-3.5 w-3.5 text-faint" /> {salon.capacidad} est.
+                    </span>
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </div>
 
-      {/* VENTANA MODAL */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <button
-              onClick={() => {
-                setIsModalOpen(false);
-                setSalonAEditar(null);
-              }}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition-all z-10 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="max-h-[90vh] overflow-y-auto p-2">
-              <SalonForm 
-                salonToEdit={salonAEditar} 
-                onSuccess={handleFormSuccess} 
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal open={isModalOpen} onClose={() => { setIsModalOpen(false); setSalonAEditar(null); }}>
+        <SalonForm salonToEdit={salonAEditar} onSuccess={handleFormSuccess} />
+      </Modal>
     </div>
   );
 }
