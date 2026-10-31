@@ -14,6 +14,7 @@ import {
   getConfigEstudiante,
   generarHorarioEstudiante,
 } from '../services/api';
+import { PageHeader, Button, Badge, Alert, fieldClass, labelClass } from '../components/ui';
 
 const SEMESTRES = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
@@ -117,27 +118,27 @@ export default function MiHorario() {
   const otras = materias.filter((m) => !SEMESTRES.includes(m.semestre));
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <header className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 flex items-center gap-3">
-          <Sparkles className="text-orange-600 w-8 h-8" />
-          Mi Horario
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Elige tus materias por semestre y te propondremos el mejor horario sin cruces.
-        </p>
-      </header>
+    <div className="mx-auto max-w-7xl">
+      <PageHeader
+        kicker="Estudiante"
+        title="Mi horario"
+        description="Elige tus materias por semestre y te propondremos el mejor horario sin cruces."
+      />
 
-      <form onSubmit={handleGenerar} className="space-y-6">
-        <div className="sticky top-0 z-10 bg-white p-5 rounded-xl shadow-sm border border-gray-200 space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <div className="flex items-center gap-3">
-              <GraduationCap className="w-5 h-5 text-orange-600" />
-              <label className="text-sm font-semibold text-gray-700">¿En qué semestre estás?</label>
+      <form onSubmit={handleGenerar} className="space-y-5">
+        <div className="sticky top-0 z-10 space-y-4 rounded-lg border border-line bg-surface/95 p-4 backdrop-blur-sm sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+            <div className="w-full shrink-0 sm:w-48">
+              <label htmlFor="semestre-actual" className={labelClass}>
+                <span className="inline-flex items-center gap-1.5">
+                  <GraduationCap className="h-3.5 w-3.5" /> Semestre actual
+                </span>
+              </label>
               <select
+                id="semestre-actual"
                 value={semestreActual ?? ''}
                 onChange={handleSemestreActual}
-                className="p-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                className={fieldClass}
               >
                 <option value="">-- Selecciona --</option>
                 {SEMESTRES.map((s) => (
@@ -148,54 +149,58 @@ export default function MiHorario() {
               </select>
             </div>
 
-            <div className="flex-1 md:max-w-md md:ml-auto">
-              <div className="flex items-center justify-between text-sm mb-1">
-                <span className="flex items-center gap-1.5 text-gray-600 font-medium">
-                  <Wallet className="w-4 h-4 text-orange-600" /> Créditos
+            <div className="flex-1 lg:px-4">
+              <div className="mb-1.5 flex items-center justify-between text-xs">
+                <span className="inline-flex items-center gap-1.5 font-semibold uppercase tracking-[0.12em] text-muted">
+                  <Wallet className="h-3.5 w-3.5" /> Créditos
                 </span>
-                <span className={creditosRestantes < 0 ? 'text-red-600 font-bold' : 'text-gray-700 font-bold'}>
+                <span
+                  className={`tabular font-semibold ${
+                    creditosRestantes < 0 ? 'text-red-700' : 'text-ink'
+                  }`}
+                >
                   {creditosTotales} / {maxCreditos}
                 </span>
               </div>
-              <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-line">
                 <div
                   className={`h-full rounded-full transition-all duration-300 ${
-                    creditosRestantes < 0 ? 'bg-red-500' : 'bg-orange-500'
+                    creditosRestantes < 0 ? 'bg-red-600' : 'bg-brand-600'
                   }`}
                   style={{ width: `${porcentaje}%` }}
                 />
               </div>
-              <p className="text-[11px] text-gray-400 mt-1">
+              <p className="mt-1.5 text-[11px] text-faint">
                 Te quedan {Math.max(0, creditosRestantes)} créditos disponibles
               </p>
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={seleccionadas.length === 0 || generando}
-              className="py-3 px-6 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg shadow transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full shrink-0 px-5 py-2.5 lg:w-auto"
             >
               {generando ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Generando...
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generando…
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4" />
+                  <Sparkles className="h-4 w-4" />
                   Generar mi horario
                 </>
               )}
-            </button>
+            </Button>
           </div>
 
-          {error && (
-            <p className="text-xs text-red-600 bg-red-50 p-2.5 rounded border border-red-200">{error}</p>
-          )}
+          {error && <Alert tone="danger">{error}</Alert>}
         </div>
 
         {loadingList ? (
-          <div className="text-center py-16 text-gray-400 text-sm">Cargando materias...</div>
+          <div className="rounded-lg border border-line bg-surface px-5 py-16 text-center text-sm text-muted">
+            Cargando materias…
+          </div>
         ) : (
           <div className="space-y-3">
             {gruposSemestre.map((g) => (
@@ -228,88 +233,84 @@ export default function MiHorario() {
       </form>
 
       {resultado && resultado.status === 'REQUIERE_SELECCION' && (
-        <section className="bg-white p-6 rounded-xl shadow-sm border border-amber-300 space-y-4">
-          <div className="flex items-start gap-2 text-amber-800">
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+        <section className="mt-5 space-y-4 rounded-lg border border-[#e2d3a7] bg-[#fbf6e9] p-5">
+          <div className="flex items-start gap-2.5 text-[#6b5518]">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
-              <p className="font-semibold">{resultado.mensaje}</p>
-              <p className="text-xs mt-1">
+              <p className="text-sm font-semibold">{resultado.mensaje}</p>
+              <p className="mt-1 text-xs">
                 Elige cuál de las materias en conflicto conservar para continuar:
               </p>
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {resultado.pares_conflicto?.map((par, i) => (
               <div
                 key={`${par.a_id}-${par.b_id}-${i}`}
-                className="p-4 rounded-xl border border-amber-200 bg-amber-50/60 flex flex-col md:flex-row md:items-center justify-between gap-3"
+                className="flex flex-col justify-between gap-3 rounded-md border border-[#e2d3a7] bg-surface p-3.5 md:flex-row md:items-center"
               >
-                <span className="text-sm text-gray-700 font-medium">
-                  {par.a}{' '}
-                  <span className="text-[10px] font-semibold bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full uppercase">
-                    {par.a_tipo === 'ELECTIVA' ? 'Electiva' : 'Fundamental'}
-                  </span>
-                  <span className="text-gray-400 mx-2">vs</span>
-                  {par.b}{' '}
-                  <span className="text-[10px] font-semibold bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full uppercase">
-                    {par.b_tipo === 'ELECTIVA' ? 'Electiva' : 'Fundamental'}
-                  </span>
+                <span className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-ink">
+                  {par.a}
+                  <Badge tone="neutral">{par.a_tipo === 'ELECTIVA' ? 'Electiva' : 'Fundamental'}</Badge>
+                  <span className="mx-1 text-[11px] uppercase text-faint">vs</span>
+                  {par.b}
+                  <Badge tone="neutral">{par.b_tipo === 'ELECTIVA' ? 'Electiva' : 'Fundamental'}</Badge>
                 </span>
-                <div className="flex gap-2 shrink-0">
-                  <button
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  <Button
                     type="button"
                     onClick={() => handleConservar(par.a_id, par.b_id)}
-                    className="px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium rounded-lg transition cursor-pointer"
+                    className="px-3 py-1.5 text-xs"
                   >
                     Conservar {par.a}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => handleConservar(par.b_id, par.a_id)}
-                    className="px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium rounded-lg transition cursor-pointer"
+                    className="px-3 py-1.5 text-xs"
                   >
                     Conservar {par.b}
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
 
           {resultado.descartadas?.length > 0 && (
-            <p className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded border border-amber-200">
+            <Alert tone="warning">
               Electivas descartadas por conflicto: {resultado.descartadas.join(', ')}
-            </p>
+            </Alert>
           )}
         </section>
       )}
 
       {resultado && resultado.status !== 'REQUIERE_SELECCION' && (
-        <section className="space-y-4">
+        <section className="mt-5 space-y-4">
           <div
-            className={`p-4 rounded-xl text-sm flex items-start gap-2 border ${
+            className={`flex items-start gap-2.5 rounded-lg border p-4 text-sm ${
               resultado.status === 'OK'
-                ? 'bg-green-50 text-green-800 border-green-200'
+                ? 'border-[#c8dcc3] bg-[#eff5ec] text-[#345c30]'
                 : resultado.status === 'PARCIAL'
-                ? 'bg-amber-50 text-amber-800 border-amber-200'
-                : 'bg-red-50 text-red-800 border-red-200'
+                ? 'border-[#e2d3a7] bg-[#fbf6e9] text-[#6b5518]'
+                : 'border-red-200 bg-red-50 text-red-700'
             }`}
           >
             {resultado.status === 'OK' ? (
-              <CheckCircle2 className="w-5 h-5 shrink-0" />
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
             ) : (
-              <AlertCircle className="w-5 h-5 shrink-0" />
+              <AlertCircle className="h-4 w-4 shrink-0" />
             )}
             <div>
               <p className="font-semibold">{resultado.mensaje}</p>
               {resultado.descartadas?.length > 0 && (
-                <p className="mt-1">Electivas descartadas: {resultado.descartadas.join(', ')}</p>
+                <p className="mt-1 text-xs">Electivas descartadas: {resultado.descartadas.join(', ')}</p>
               )}
               {resultado.no_disponibles?.length > 0 && (
-                <p className="mt-1">Sin horario: {resultado.no_disponibles.join(', ')}</p>
+                <p className="mt-1 text-xs">Sin horario: {resultado.no_disponibles.join(', ')}</p>
               )}
               {resultado.conflictos?.length > 0 && (
-                <ul className="mt-1 list-disc list-inside">
+                <ul className="mt-1 list-inside list-disc text-xs">
                   {resultado.conflictos.map((c, i) => (
                     <li key={i}>
                       {c.dia} {c.bloque_horario}: {c.asignaturas.join(' / ')}
@@ -321,11 +322,11 @@ export default function MiHorario() {
           </div>
 
           {resultado.seleccion?.length > 0 && (
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 rounded-lg border border-line bg-surface p-4">
               {resultado.seleccion.map((s) => (
                 <span
                   key={s.grupo_id}
-                  className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full"
+                  className="rounded-sm border border-line bg-canvas px-2 py-1 text-xs text-muted"
                 >
                   {s.asignatura} · Grupo {s.grupo_codigo}
                   {s.total_sesiones > 0 && ` (${s.total_sesiones} sesiones)`}
@@ -334,9 +335,13 @@ export default function MiHorario() {
             </div>
           )}
 
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Malla Horaria Sugerida</h2>
-            <MallaHoraria horarios={resultado.horario} />
+          <div className="rounded-lg border border-line bg-surface">
+            <div className="border-b border-line px-5 py-4">
+              <h2 className="font-serif text-xl text-ink">Malla horaria sugerida</h2>
+            </div>
+            <div className="p-4">
+              <MallaHoraria horarios={resultado.horario} />
+            </div>
           </div>
         </section>
       )}

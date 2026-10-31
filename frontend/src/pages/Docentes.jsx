@@ -1,7 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Users, Plus, Search, X, Clock, CreditCard, Edit2, Trash2, Briefcase, BookOpen } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Users, BookOpen } from 'lucide-react';
 import DocenteForm from '../components/forms/DocenteForm';
 import { getDocentes, deleteDocente, getAsignaturas } from '../services/api';
+import { PageHeader, Button, IconButton, Badge, EmptyState, Modal, fieldClass } from '../components/ui';
+
+const iniciales = (nombre = '') =>
+  nombre
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((parte) => parte[0])
+    .join('')
+    .toUpperCase();
 
 export default function Docentes() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -71,107 +81,162 @@ export default function Docentes() {
       doc.documento.includes(busqueda)
   );
 
-  return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold text-gray-900 flex items-center gap-3">
-            <Users className="text-orange-600 w-7 h-7" />
-            Gestión de Docentes
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">Administra el profesorado activo y su disponibilidad de horas.</p>
-        </div>
-        <button 
-          onClick={() => { setDocenteAEditar(null); setIsModalOpen(true); }}
-          className="bg-orange-600 hover:bg-orange-700 text-white font-medium px-4 py-2.5 rounded-lg text-sm shadow transition flex items-center gap-2 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" /> Nuevo Docente
-        </button>
-      </div>
+  const abrirCrear = () => {
+    setDocenteAEditar(null);
+    setIsModalOpen(true);
+  };
 
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-        <div className="relative flex-1">
+  const abrirEditar = (doc) => {
+    setDocenteAEditar(doc);
+    setIsModalOpen(true);
+  };
+
+  const materiasDe = (doc) => {
+    if ((doc.asignatura_ids || []).length === 0) return null;
+    return doc.asignatura_ids.map((asigId) => {
+      const asig = catalogo.find((a) => a.id === asigId);
+      return (
+        <Badge key={asigId} tone="brand">
+          <BookOpen className="h-2.5 w-2.5" />
+          {asig ? asig.nombre : `Materia #${asigId}`}
+        </Badge>
+      );
+    });
+  };
+
+  return (
+    <div className="mx-auto max-w-7xl">
+      <PageHeader
+        kicker="Administración académica"
+        title="Docentes"
+        description="Administra el profesorado activo, su carga máxima y las materias que puede dictar."
+        actions={
+          <Button onClick={abrirCrear}>
+            <Plus className="h-4 w-4" />
+            Nuevo docente
+          </Button>
+        }
+      />
+
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full sm:max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
           <input
             type="text"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar por nombre o documento..."
-            className="w-full p-2.5 pl-10 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
+            placeholder="Buscar por nombre o documento"
+            className={`${fieldClass} pl-9`}
           />
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
         </div>
+        <p className="text-xs text-muted">
+          <span className="tabular font-semibold text-ink">{docentesFiltrados.length}</span> de{' '}
+          <span className="tabular">{docentes.length}</span> registros
+        </p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden p-6">
+      <div className="overflow-hidden rounded-lg border border-line bg-surface">
         {loadingList ? (
-          <div className="text-center py-12 text-gray-400 text-sm">Cargando docentes...</div>
+          <div className="px-5 py-12 text-center text-sm text-muted">Cargando docentes…</div>
         ) : docentesFiltrados.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 text-sm">No hay docentes registrados.</div>
+          <EmptyState
+            icon={Users}
+            title="No hay docentes registrados"
+            description="Agrega un docente para empezar a asignar materias y disponibilidad."
+          />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {docentesFiltrados.map((doc) => (
-              <div key={doc.id} className="p-5 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-orange-50/30 transition-all shadow-xs flex flex-col justify-between gap-4">
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">{doc.nombre}</h3>
-                  <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-1">
-                    <CreditCard className="w-3.5 h-3.5 text-gray-400" /> Documento: {doc.documento}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {(doc.asignatura_ids || []).length === 0 ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
-                        <BookOpen className="w-3 h-3" /> Sin materias asignadas (no dicta)
-                      </span>
-                    ) : (
-                      doc.asignatura_ids.map((asigId) => {
-                        const asig = catalogo.find((a) => a.id === asigId);
-                        return (
-                          <span
-                            key={asigId}
-                            className="inline-flex items-center gap-1 text-[10px] font-semibold bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full"
-                          >
-                            <BookOpen className="w-3 h-3" />
-                            {asig ? asig.nombre : `Materia #${asigId}`}
+          <>
+            <div className="hidden md:block">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-line bg-canvas/70">
+                  <tr className="text-[10px] uppercase tracking-[0.14em] text-muted">
+                    <th className="px-4 py-3 font-semibold">Docente</th>
+                    <th className="px-4 py-3 font-semibold">Materias</th>
+                    <th className="px-4 py-3 text-right font-semibold">Horas máx.</th>
+                    <th className="px-4 py-3 text-right font-semibold">Admin.</th>
+                    <th className="px-4 py-3 text-right font-semibold">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {docentesFiltrados.map((doc) => (
+                    <tr key={doc.id} className="transition-colors hover:bg-canvas/60">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border border-line bg-canvas text-xs font-semibold text-muted">
+                            {iniciales(doc.nombre)}
                           </span>
-                        );
-                      })
+                          <div className="min-w-0">
+                            <p className="truncate font-semibold text-ink">{doc.nombre}</p>
+                            <p className="tabular text-xs text-muted">Doc. {doc.documento}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex max-w-md flex-wrap gap-1">
+                          {materiasDe(doc) ?? (
+                            <span className="text-xs italic text-faint">Sin materias asignadas</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="tabular px-4 py-3 text-right text-ink">{doc.horas_maximas}h</td>
+                      <td className="tabular px-4 py-3 text-right text-muted">{doc.horas_administrativas}h</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <IconButton label="Editar docente" onClick={() => abrirEditar(doc)}>
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </IconButton>
+                          <IconButton label="Eliminar docente" tone="danger" onClick={() => handleDelete(doc.id)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </IconButton>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <ul className="divide-y divide-line md:hidden">
+              {docentesFiltrados.map((doc) => (
+                <li key={doc.id} className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border border-line bg-canvas text-xs font-semibold text-muted">
+                        {iniciales(doc.nombre)}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-ink">{doc.nombre}</p>
+                        <p className="tabular text-xs text-muted">Doc. {doc.documento}</p>
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <IconButton label="Editar docente" onClick={() => abrirEditar(doc)}>
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </IconButton>
+                      <IconButton label="Eliminar docente" tone="danger" onClick={() => handleDelete(doc.id)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </IconButton>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {materiasDe(doc) ?? (
+                      <span className="text-xs italic text-faint">Sin materias asignadas</span>
                     )}
                   </div>
-                </div>
-
-                <div className="pt-3 border-t border-gray-200/60 flex items-center justify-between text-xs text-gray-500">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-orange-500" /> Máx: <strong className="text-gray-700">{doc.horas_maximas}h</strong>
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Briefcase className="w-3.5 h-3.5 text-gray-400" /> Admin: <strong className="text-gray-700">{doc.horas_administrativas}h</strong>
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => { setDocenteAEditar(doc); setIsModalOpen(true); }} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer" title="Editar">
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleDelete(doc.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer" title="Eliminar">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                  <div className="mt-3 flex gap-4 border-t border-line pt-2.5 text-xs text-muted">
+                    <span className="tabular">Máx. <strong className="font-semibold text-ink">{doc.horas_maximas}h</strong></span>
+                    <span className="tabular">Admin. <strong className="font-semibold text-ink">{doc.horas_administrativas}h</strong></span>
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <button onClick={() => { setIsModalOpen(false); setDocenteAEditar(null); }} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition-all z-10 cursor-pointer">
-              <X className="w-5 h-5" />
-            </button>
-            <div className="max-h-[90vh] overflow-y-auto p-2">
-              <DocenteForm docenteToEdit={docenteAEditar} onSuccess={handleFormSuccess} />
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal open={isModalOpen} onClose={() => { setIsModalOpen(false); setDocenteAEditar(null); }}>
+        <DocenteForm docenteToEdit={docenteAEditar} onSuccess={handleFormSuccess} />
+      </Modal>
     </div>
   );
 }

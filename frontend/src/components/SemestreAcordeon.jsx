@@ -14,27 +14,34 @@ export default function SemestreAcordeon({
   const seleccionadasSet = new Set(seleccionadas);
   const seleccionadasSemestre = materias.filter((m) => seleccionadasSet.has(m.id));
   const creditosSemestre = seleccionadasSemestre.reduce((acc, m) => acc + m.creditos, 0);
+  const tieneSeleccion = seleccionadasSemestre.length > 0;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+    <div className="overflow-hidden rounded-lg border border-line bg-surface">
       <button
         type="button"
         onClick={onToggleAcordeon}
-        className="w-full flex items-center justify-between gap-4 p-5 text-left hover:bg-orange-50/40 transition-colors"
+        className="flex w-full items-center justify-between gap-4 p-4 text-left transition-colors hover:bg-canvas/60 sm:p-5"
       >
-        <div className="flex items-center gap-4">
-          <span className="w-12 h-12 shrink-0 rounded-xl bg-orange-100 text-orange-700 font-extrabold text-lg flex items-center justify-center">
+        <div className="flex items-center gap-3.5">
+          <span
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-sm border font-serif text-lg ${
+              tieneSeleccion
+                ? 'border-brand-200 bg-brand-50 text-brand-800'
+                : 'border-line bg-canvas text-ink'
+            }`}
+          >
             {semestre === 'Otros' ? '·' : semestre}
           </span>
           <div>
-            <h3 className="font-bold text-gray-900">
+            <h3 className="font-semibold text-ink">
               {semestre === 'Otros' ? 'Otras materias' : `Semestre ${semestre}`}
             </h3>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted">
               {materias.length} materia(s)
-              {seleccionadasSemestre.length > 0 && (
-                <span className="text-orange-600 font-semibold">
-                  {' '}· {seleccionadasSemestre.length} elegida(s) · {creditosSemestre} créditos
+              {tieneSeleccion && (
+                <span className="ml-1 text-brand-700">
+                  · {seleccionadasSemestre.length} elegida(s) · {creditosSemestre} créditos
                 </span>
               )}
             </p>
@@ -44,9 +51,9 @@ export default function SemestreAcordeon({
         <motion.span
           animate={{ rotate: abierto ? 180 : 0 }}
           transition={{ duration: 0.2 }}
-          className="text-gray-400 shrink-0"
+          className="shrink-0 text-faint"
         >
-          <ChevronDown className="w-5 h-5" />
+          <ChevronDown className="h-4 w-4" />
         </motion.span>
       </button>
 
@@ -60,9 +67,9 @@ export default function SemestreAcordeon({
             transition={{ duration: 0.25, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <div className="px-5 pb-5 pt-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-2.5 border-t border-line px-4 py-4 md:grid-cols-2 lg:grid-cols-3 sm:px-5">
               {materias.length === 0 ? (
-                <p className="col-span-full text-center py-6 text-sm text-gray-400">
+                <p className="col-span-full py-6 text-center text-sm text-faint">
                   No hay materias en este semestre.
                 </p>
               ) : (
@@ -82,57 +89,76 @@ export default function SemestreAcordeon({
                       disabled={bloqueada}
                       whileHover={!bloqueada ? { y: -2 } : undefined}
                       whileTap={!bloqueada ? { scale: 0.98 } : undefined}
-                      className={`relative text-left p-4 rounded-xl border transition-colors flex flex-col gap-2 ${
+                      className={`relative flex flex-col gap-2 rounded-md border p-3.5 text-left transition-colors ${
                         bloqueada
-                          ? 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed'
+                          ? 'cursor-not-allowed border-line bg-canvas/60 opacity-60'
                           : activa
-                          ? 'border-orange-500 bg-orange-50 shadow-sm'
-                          : 'border-gray-100 bg-gray-50/50 hover:border-orange-200 cursor-pointer'
+                          ? 'border-brand-600 bg-brand-50/70'
+                          : 'cursor-pointer border-line bg-surface hover:border-line-strong'
                       }`}
                     >
-                      <div className="flex justify-between items-start gap-2">
-                        <span className="bg-orange-100 text-orange-700 text-[11px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide">
+                      <div className="flex items-start justify-between gap-2">
+                        <span
+                          className={`rounded-sm border px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.06em] ${
+                            activa
+                              ? 'border-brand-200 bg-surface text-brand-800'
+                              : 'border-line bg-canvas text-muted'
+                          }`}
+                        >
                           {m.codigo_uccd}
                         </span>
-                        <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1 shrink-0">
-                          <Award className="w-3.5 h-3.5 text-orange-500" /> {m.creditos}
-                        </span>
+                        <AnimatePresence mode="wait" initial={false}>
+                          {bloqueada && !activa ? (
+                            <motion.span
+                              key="bloqueada"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="flex shrink-0 items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-faint"
+                            >
+                              <Lock className="h-3 w-3" /> Bloqueada
+                            </motion.span>
+                          ) : activa ? (
+                            <motion.span
+                              key="elegida"
+                              initial={{ scale: 0.8, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0.8, opacity: 0 }}
+                              className="flex shrink-0 items-center gap-1 rounded-sm bg-brand-600 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-white"
+                            >
+                              <Check className="h-3 w-3" /> Elegida
+                            </motion.span>
+                          ) : (
+                            <motion.span
+                              key="creditos"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="tabular flex shrink-0 items-center gap-1 text-[11px] font-semibold text-muted"
+                            >
+                              <Award className="h-3.5 w-3.5 text-faint" /> {m.creditos}
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
                       </div>
 
-                      <h4 className="font-bold text-gray-900 text-sm leading-tight">{m.nombre}</h4>
+                      <h4 className="text-sm font-semibold leading-tight text-ink">{m.nombre}</h4>
 
-                      <div className="flex items-center justify-between text-[11px] text-gray-500">
+                      <div className="flex items-center justify-between text-[11px] text-muted">
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" /> Sem. {m.semestre}
+                          <Clock className="h-3 w-3 text-faint" /> Sem. {m.semestre}
                         </span>
-                        <span className={sinHorario ? 'text-red-500 font-semibold' : ''}>
+                        <span className={sinHorario ? 'font-semibold text-red-700' : ''}>
                           {sinHorario ? 'Sin horario' : `${m.grupos_programados} sección(es)`}
                         </span>
                       </div>
 
                       {esRepeticion && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full w-fit">
-                          <Repeat className="w-3 h-3" /> Repetición
+                        <span className="inline-flex w-fit items-center gap-1 rounded-sm border border-[#e2d3a7] bg-[#fbf6e9] px-1.5 py-0.5 text-[10px] font-semibold text-[#6b5518]">
+                          <Repeat className="h-2.5 w-2.5" /> Repetición
                         </span>
                       )}
 
-                      <AnimatePresence>
-                        {activa && (
-                          <motion.span
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0, opacity: 0 }}
-                            className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-orange-600 text-white flex items-center justify-center shadow"
-                          >
-                            <Check className="w-3.5 h-3.5" />
-                          </motion.span>
-                        )}
-                        {bloqueada && (
-                          <span className="absolute top-3 right-3 text-gray-400">
-                            <Lock className="w-3.5 h-3.5" />
-                          </span>
-                        )}
-                      </AnimatePresence>
                     </motion.button>
                   );
                 })

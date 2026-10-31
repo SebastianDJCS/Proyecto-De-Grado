@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { DoorOpen, Save, Loader2 } from 'lucide-react';
+import { Save, Loader2 } from 'lucide-react';
 import { createSalon, updateSalon } from '../../services/api';
+import { Alert, fieldClass, labelClass } from '../ui';
 
 export default function SalonForm({ salonToEdit, onSuccess }) {
-  // Si salonToEdit existe, carga sus datos de entrada. Si no, arranca vacío.
   const [formData, setFormData] = useState(
     salonToEdit || {
       sede: '',
@@ -31,7 +31,6 @@ export default function SalonForm({ salonToEdit, onSuccess }) {
 
     try {
       if (salonToEdit) {
-        // Si estamos editando, llamamos a PUT
         await updateSalon(salonToEdit.id, {
           sede: formData.sede,
           nomenclatura: formData.nomenclatura,
@@ -41,7 +40,6 @@ export default function SalonForm({ salonToEdit, onSuccess }) {
         });
         setMensaje({ texto: '¡Salón actualizado con éxito!', tipo: 'success' });
       } else {
-        // Si es nuevo, llamamos a POST
         await createSalon({
           sede: formData.sede,
           nomenclatura: formData.nomenclatura,
@@ -49,10 +47,9 @@ export default function SalonForm({ salonToEdit, onSuccess }) {
           nombre: formData.nombre && formData.nombre.trim() === '' ? null : formData.nombre,
           tipo: formData.tipo,
         });
-        setMensaje({ texto: '¡Salón creado y guardado en la base de datos con éxito!', tipo: 'success' });
+        setMensaje({ texto: '¡Salón creado y guardado con éxito!', tipo: 'success' });
       }
 
-      // Espera un momento y avisa al componente padre para cerrar y recargar
       if (onSuccess) {
         setTimeout(() => {
           onSuccess();
@@ -67,132 +64,119 @@ export default function SalonForm({ salonToEdit, onSuccess }) {
   };
 
   return (
-    <div className="max-w-xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-      {/* Cabecera del Formulario */}
-      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-        <div className="bg-orange-100 p-3 rounded-xl text-orange-600">
-          <DoorOpen className="w-6 h-6" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">
-            {salonToEdit ? 'Editar Salón' : 'Registrar Nuevo Salón'}
-          </h2>
-          <p className="text-sm text-gray-500">
-            {salonToEdit 
-              ? `Modificando la información de ${salonToEdit.nomenclatura}` 
-              : 'Añade espacios físicos según la sede y nomenclatura.'}
-          </p>
-        </div>
+    <div className="p-6 sm:p-8">
+      <div className="mb-6 border-b border-line pb-5 pr-10">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
+          {salonToEdit ? 'Edición' : 'Registro'}
+        </p>
+        <h2 className="mt-1 font-serif text-2xl text-ink">
+          {salonToEdit ? 'Editar salón' : 'Nuevo salón'}
+        </h2>
+        <p className="mt-1.5 text-sm text-muted">
+          {salonToEdit
+            ? `Modificando la información de ${salonToEdit.nomenclatura}.`
+            : 'Añade espacios físicos según la sede y nomenclatura.'}
+        </p>
       </div>
 
-      {/* Alertas */}
       {mensaje.texto && (
-        <div className={`mb-6 p-4 rounded-xl text-sm font-medium ${
-          mensaje.tipo === 'success' 
-            ? 'bg-green-50 text-green-700 border border-green-200' 
-            : 'bg-red-50 text-red-700 border border-red-200'
-        }`}>
+        <Alert tone={mensaje.tipo === 'success' ? 'success' : 'danger'} className="mb-5">
           {mensaje.texto}
-        </div>
+        </Alert>
       )}
 
-      {/* Formulario */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Sede */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
-            Sede
-          </label>
-          <input
-            type="text"
-            name="sede"
-            value={formData.sede}
-            onChange={handleChange}
-            required
-            placeholder="Ej. Biblioteca o Rafael Núñez"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all"
-          />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="salon-sede" className={labelClass}>Sede</label>
+            <input
+              id="salon-sede"
+              type="text"
+              name="sede"
+              value={formData.sede}
+              onChange={handleChange}
+              required
+              placeholder="Ej. Rafael Núñez"
+              className={fieldClass}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="salon-nomenclatura" className={labelClass}>Nomenclatura</label>
+            <input
+              id="salon-nomenclatura"
+              type="text"
+              name="nomenclatura"
+              value={formData.nomenclatura}
+              onChange={handleChange}
+              required
+              placeholder="Ej. A-103 o LAB-01"
+              className={fieldClass}
+            />
+          </div>
         </div>
 
-        {/* Nomenclatura */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
-            Nomenclatura (Código)
-          </label>
-          <input
-            type="text"
-            name="nomenclatura"
-            value={formData.nomenclatura}
-            onChange={handleChange}
-            required
-            placeholder="Ej. A-103 o LAB-01"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all"
-          />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="salon-capacidad" className={labelClass}>Capacidad</label>
+            <input
+              id="salon-capacidad"
+              type="number"
+              name="capacidad"
+              value={formData.capacidad}
+              onChange={handleChange}
+              required
+              min="1"
+              placeholder="Ej. 30"
+              className={fieldClass}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="salon-tipo" className={labelClass}>Tipo de espacio</label>
+            <select
+              id="salon-tipo"
+              name="tipo"
+              value={formData.tipo}
+              onChange={handleChange}
+              className={fieldClass}
+            >
+              <option value="AULA">AULA</option>
+              <option value="LABORATORIO">LABORATORIO</option>
+              <option value="AUDITORIO">AUDITORIO</option>
+            </select>
+          </div>
         </div>
 
-        {/* Capacidad */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
-            Capacidad
+          <label htmlFor="salon-nombre" className={`${labelClass} flex items-center gap-1`}>
+            Nombre descriptivo <span className="font-normal normal-case tracking-normal text-faint">(opcional)</span>
           </label>
           <input
-            type="number"
-            name="capacidad"
-            value={formData.capacidad}
-            onChange={handleChange}
-            required
-            min="1"
-            placeholder="Ej. 30"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all"
-          />
-        </div>
-
-        {/* Nombre (Opcional) */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
-            Nombre Descriptivo <span className="text-gray-400 font-normal">(Opcional)</span>
-          </label>
-          <input
+            id="salon-nombre"
             type="text"
             name="nombre"
             value={formData.nombre || ''}
             onChange={handleChange}
-            placeholder="Ej. Alfa o Laboratorio de Cómputo"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all"
+            placeholder="Ej. Laboratorio de Cómputo"
+            className={fieldClass}
           />
-        </div>
-
-        {/* Tipo */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
-            Tipo de Espacio
-          </label>
-          <select
-            name="tipo"
-            value={formData.tipo}
-            onChange={handleChange}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 text-sm transition-all bg-white"
-          >
-            <option value="AULA">AULA</option>
-            <option value="LABORATORIO">LABORATORIO</option>
-            <option value="AUDITORIO">AUDITORIO</option>
-          </select>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full mt-2 bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-4 rounded-xl shadow-md shadow-orange-600/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-md border border-brand-700 bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:border-brand-800 hover:bg-brand-800 disabled:opacity-50"
         >
           {loading ? (
             <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>{salonToEdit ? 'Actualizando en Neon...' : 'Guardando en Neon...'}</span>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Guardando…</span>
             </>
           ) : (
             <>
-              <Save className="w-5 h-5" />
-              <span>{salonToEdit ? 'Actualizar Salón' : 'Guardar Salón'}</span>
+              <Save className="h-4 w-4" />
+              <span>{salonToEdit ? 'Actualizar salón' : 'Guardar salón'}</span>
             </>
           )}
         </button>

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, Plus, Search, X, Award, Layers, Clock, Edit2, Trash2 } from 'lucide-react';
+import { BookOpen, Plus, Search, Edit2, Trash2 } from 'lucide-react';
 import AsignaturaForm from '../components/forms/AsignaturaForm';
 import { getAsignaturas, deleteAsignatura } from '../services/api';
+import { PageHeader, Button, IconButton, Badge, EmptyState, Modal, fieldClass } from '../components/ui';
 
 export default function Asignaturas() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -64,114 +65,164 @@ export default function Asignaturas() {
       asig.codigo_uccd.toLowerCase().includes(busqueda.toLowerCase())
   );
 
-  return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold text-gray-900 flex items-center gap-3">
-            <BookOpen className="text-orange-600 w-7 h-7" />
-            Gestión de Asignaturas
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">Administra el catálogo de materias, créditos y horas semanales.</p>
-        </div>
-        <button 
-          onClick={() => { setAsignaturaAEditar(null); setIsModalOpen(true); }}
-          className="bg-orange-600 hover:bg-orange-700 text-white font-medium px-4 py-2.5 rounded-lg text-sm shadow transition flex items-center gap-2 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" /> Nueva Asignatura
-        </button>
-      </div>
+  const abrirCrear = () => {
+    setAsignaturaAEditar(null);
+    setIsModalOpen(true);
+  };
 
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-        <div className="relative flex-1">
+  const abrirEditar = (asig) => {
+    setAsignaturaAEditar(asig);
+    setIsModalOpen(true);
+  };
+
+  const etiquetas = (asig) => (
+    <div className="mt-1.5 flex flex-wrap gap-1">
+      <Badge tone={asig.tipo === 'ELECTIVA' ? 'warning' : 'neutral'}>
+        {asig.tipo === 'ELECTIVA' ? 'Electiva' : 'Fundamental'}
+      </Badge>
+      {asig.seleccionable && <Badge tone="success">Disponible para estudiantes</Badge>}
+    </div>
+  );
+
+  const carga = (asig) => (
+    <div className="text-xs text-muted">
+      <p className="tabular">
+        <strong className="font-semibold text-ink">{asig.secciones ?? 0}</strong> grupo(s)
+      </p>
+      <p className="tabular">
+        {asig.secciones_por_grupo ?? 1}×{asig.horas_por_seccion ?? 2}h por grupo
+      </p>
+    </div>
+  );
+
+  return (
+    <div className="mx-auto max-w-7xl">
+      <PageHeader
+        kicker="Plan de estudios"
+        title="Asignaturas"
+        description="Administra el catálogo de materias, créditos, grupos y horas semanales."
+        actions={
+          <Button onClick={abrirCrear}>
+            <Plus className="h-4 w-4" />
+            Nueva asignatura
+          </Button>
+        }
+      />
+
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full sm:max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
           <input
             type="text"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar por nombre o código UCCD..."
-            className="w-full p-2.5 pl-10 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
+            placeholder="Buscar por nombre o código UCCD"
+            className={`${fieldClass} pl-9`}
           />
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
         </div>
+        <p className="text-xs text-muted">
+          <span className="tabular font-semibold text-ink">{asignaturasFiltradas.length}</span> de{' '}
+          <span className="tabular">{asignaturas.length}</span> asignaturas
+        </p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden p-6">
+      <div className="overflow-hidden rounded-lg border border-line bg-surface">
         {loadingList ? (
-          <div className="text-center py-12 text-gray-400 text-sm">Cargando asignaturas...</div>
+          <div className="px-5 py-12 text-center text-sm text-muted">Cargando asignaturas…</div>
         ) : asignaturasFiltradas.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 text-sm">No hay asignaturas registradas.</div>
+          <EmptyState
+            icon={BookOpen}
+            title="No hay asignaturas registradas"
+            description="Agrega las materias del plan de estudios para poder programar sus grupos."
+          />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {asignaturasFiltradas.map((asig) => (
-              <div key={asig.id} className="p-5 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-orange-50/30 transition-all shadow-xs flex flex-col justify-between gap-4">
-                <div>
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2.5 py-1 rounded-md uppercase tracking-wide">
-                      {asig.codigo_uccd}
-                    </span>
-                    <span className="text-xs font-semibold text-gray-500 flex items-center gap-1">
-                      <Award className="w-3.5 h-3.5 text-orange-500" /> {asig.creditos} Créditos
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900">{asig.nombre}</h3>
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    <span
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                        (asig.tipo || 'FUNDAMENTAL') === 'ELECTIVA'
-                          ? 'bg-purple-100 text-purple-700'
-                          : 'bg-blue-100 text-blue-700'
-                      }`}
-                    >
-                      {(asig.tipo || 'FUNDAMENTAL') === 'ELECTIVA' ? 'Electiva' : 'Fundamental'}
-                    </span>
-                    <span className="text-[10px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                      {asig.secciones ?? 0} grupo(s)
-                    </span>
-                    <span className="text-[10px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                      {asig.secciones_por_grupo ?? 1}×{asig.horas_por_seccion ?? 2}h /grupo
-                    </span>
-                    {asig.seleccionable && (
-                      <span className="text-[10px] font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                        Disponible para estudiantes
-                      </span>
-                    )}
-                  </div>
-                </div>
+          <>
+            <div className="hidden md:block">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-line bg-canvas/70">
+                  <tr className="text-[10px] uppercase tracking-[0.14em] text-muted">
+                    <th className="px-4 py-3 font-semibold">Asignatura</th>
+                    <th className="px-4 py-3 text-right font-semibold">Semestre</th>
+                    <th className="px-4 py-3 text-right font-semibold">Créditos</th>
+                    <th className="px-4 py-3 font-semibold">Carga</th>
+                    <th className="px-4 py-3 text-right font-semibold">H. semanales</th>
+                    <th className="px-4 py-3 text-right font-semibold">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {asignaturasFiltradas.map((asig) => (
+                    <tr key={asig.id} className="transition-colors hover:bg-canvas/60">
+                      <td className="px-4 py-3">
+                        <div className="flex items-start gap-3">
+                          <Badge tone="brand" className="mt-0.5 shrink-0 font-mono normal-case tracking-normal">
+                            {asig.codigo_uccd}
+                          </Badge>
+                          <div className="min-w-0">
+                            <p className="font-semibold text-ink">{asig.nombre}</p>
+                            {etiquetas(asig)}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="tabular px-4 py-3 text-right text-muted">{asig.semestre}</td>
+                      <td className="tabular px-4 py-3 text-right text-ink">{asig.creditos}</td>
+                      <td className="px-4 py-3">{carga(asig)}</td>
+                      <td className="tabular px-4 py-3 text-right text-ink">{asig.horas_semanales}h</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <IconButton label="Editar asignatura" onClick={() => abrirEditar(asig)}>
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </IconButton>
+                          <IconButton label="Eliminar asignatura" tone="danger" onClick={() => handleDelete(asig.id)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </IconButton>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-                <div className="pt-3 border-t border-gray-200/60 flex items-center justify-between text-xs text-gray-500">
-                  <span className="flex items-center gap-1">
-                    <Layers className="w-3.5 h-3.5 text-gray-400" /> Sem: <strong className="text-gray-700">{asig.semestre}</strong>
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-orange-500" /> H. Semanales: <strong className="text-gray-700">{asig.horas_semanales}h</strong>
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => { setAsignaturaAEditar(asig); setIsModalOpen(true); }} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer" title="Editar">
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleDelete(asig.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer" title="Eliminar">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+            <ul className="divide-y divide-line md:hidden">
+              {asignaturasFiltradas.map((asig) => (
+                <li key={asig.id} className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge tone="brand" className="font-mono normal-case tracking-normal">
+                          {asig.codigo_uccd}
+                        </Badge>
+                        <p className="font-semibold text-ink">{asig.nombre}</p>
+                      </div>
+                      {etiquetas(asig)}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <IconButton label="Editar asignatura" onClick={() => abrirEditar(asig)}>
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </IconButton>
+                      <IconButton label="Eliminar asignatura" tone="danger" onClick={() => handleDelete(asig.id)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </IconButton>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                  <div className="mt-3 flex items-end justify-between gap-3 border-t border-line pt-2.5">
+                    <div className="flex gap-4 text-xs text-muted">
+                      <span className="tabular">Sem. <strong className="font-semibold text-ink">{asig.semestre}</strong></span>
+                      <span className="tabular"><strong className="font-semibold text-ink">{asig.creditos}</strong> créd.</span>
+                      <span className="tabular"><strong className="font-semibold text-ink">{asig.horas_semanales}h</strong> sem.</span>
+                    </div>
+                    {carga(asig)}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <button onClick={() => { setIsModalOpen(false); setAsignaturaAEditar(null); }} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition-all z-10 cursor-pointer">
-              <X className="w-5 h-5" />
-            </button>
-            <div className="max-h-[90vh] overflow-y-auto p-2">
-              <AsignaturaForm asignaturaToEdit={asignaturaAEditar} onSuccess={handleFormSuccess} />
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal open={isModalOpen} onClose={() => { setIsModalOpen(false); setAsignaturaAEditar(null); }}>
+        <AsignaturaForm asignaturaToEdit={asignaturaAEditar} onSuccess={handleFormSuccess} />
+      </Modal>
     </div>
   );
 }
