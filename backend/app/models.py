@@ -24,6 +24,40 @@ asignatura_docente = Table(
 )
 
 
+# Relación N:M auto-referencial: qué materias son prerrequisito de cuáles.
+asignatura_prerequisito = Table(
+	"asignatura_prerequisito",
+	Base.metadata,
+	Column(
+		"asignatura_id",
+		ForeignKey("asignaturas.id", ondelete="CASCADE"),
+		primary_key=True,
+	),
+	Column(
+		"prerequisito_id",
+		ForeignKey("asignaturas.id", ondelete="CASCADE"),
+		primary_key=True,
+	),
+)
+
+
+# Relación N:M entre usuarios (estudiantes) y las materias que reprobaron.
+usuario_asignatura_reprobada = Table(
+	"usuario_asignatura_reprobada",
+	Base.metadata,
+	Column(
+		"usuario_id",
+		ForeignKey("usuarios.id", ondelete="CASCADE"),
+		primary_key=True,
+	),
+	Column(
+		"asignatura_id",
+		ForeignKey("asignaturas.id", ondelete="CASCADE"),
+		primary_key=True,
+	),
+)
+
+
 class Docente(Base):
     __tablename__ = "docentes"
 
@@ -111,10 +145,28 @@ class Asignatura(Base):
 		secondary="asignatura_docente",
 		back_populates="asignaturas",
 	)
+	# Materias que deben aprobarse antes de cursar esta
+	prerequisitos: Mapped[list["Asignatura"]] = relationship(
+		secondary="asignatura_prerequisito",
+		primaryjoin="Asignatura.id == asignatura_prerequisito.c.asignatura_id",
+		secondaryjoin="Asignatura.id == asignatura_prerequisito.c.prerequisito_id",
+		back_populates="es_prerequisito_de",
+	)
+	# Materias que dependen de esta
+	es_prerequisito_de: Mapped[list["Asignatura"]] = relationship(
+		secondary="asignatura_prerequisito",
+		primaryjoin="Asignatura.id == asignatura_prerequisito.c.prerequisito_id",
+		secondaryjoin="Asignatura.id == asignatura_prerequisito.c.asignatura_id",
+		back_populates="prerequisitos",
+	)
 
 	@property
 	def secciones(self) -> int:
 		return len(self.grupos_proyectados)
+
+	@property
+	def prerequisito_ids(self) -> list[int]:
+		return [asignatura.id for asignatura in self.prerequisitos]
 
 
 class GrupoProyectado(Base):
@@ -159,11 +211,21 @@ class Usuario(Base):
 	__tablename__ = "usuarios"
 
 	id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-	username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+	# Para estudiantes, username guarda el correo electrónico.
+	username: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
 	password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
 	nombre: Mapped[str] = mapped_column(String(255), nullable=False, server_default="")
 	rol: Mapped[str] = mapped_column(String(20), nullable=False, server_default="admin", default="admin")
 	activo: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true", default=True)
+	# Semestre actual del estudiante (se actualiza desde "Nuevo horario").
+	semestre: Mapped[int | None] = mapped_column(Integer, nullable=True)
+	materias_reprobadas: Mapped[list["Asignatura"]] = relationship(
+		secondary="usuario_asignatura_reprobada",
+	)
+
+	@property
+	def materia_reprobada_ids(self) -> list[int]:
+		return [asignatura.id for asignatura in self.materias_reprobadas]
 
 
 __all__ = [
@@ -176,4 +238,6 @@ __all__ = [
 	"HorarioOptimizado",
 	"Usuario",
 	"asignatura_docente",
+	"asignatura_prerequisito",
+	"usuario_asignatura_reprobada",
 ]

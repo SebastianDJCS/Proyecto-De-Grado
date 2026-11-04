@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 TIPOS_ASIGNATURA = ("FUNDAMENTAL", "ELECTIVA")
@@ -23,6 +23,8 @@ class AsignaturaCreate(AsignaturaBase):
     num_secciones: int = Field(default=1, ge=1, le=20)
     # Matrícula estimada por sección (opcional, el ETL puede actualizarla después)
     estudiantes_por_seccion: int = Field(default=0, ge=0)
+    # Materias que deben aprobarse antes de cursar esta
+    prerequisito_ids: List[int] = []
 
 
 class AsignaturaUpdate(BaseModel):
@@ -41,9 +43,12 @@ class AsignaturaUpdate(BaseModel):
     num_secciones: Optional[int] = Field(default=None, ge=0, le=20)
     # Estudiantes por sección para los grupos nuevos que se creen al aumentar
     estudiantes_por_seccion: Optional[int] = Field(default=None, ge=0)
+    # Materias prerrequisito (si se envía, reemplaza la lista completa)
+    prerequisito_ids: Optional[List[int]] = None
 
 
 class AsignaturaResponse(AsignaturaBase):
     id: int
     secciones: int = 0
+    prerequisito_ids: List[int] = []
     model_config = ConfigDict(from_attributes=True)

@@ -9,7 +9,8 @@ Sistema de optimización de horarios (problema UCTP) con **FastAPI + OR-Tools CP
 - **Garantía para el estudiante**: a lo sumo **una clase por (semestre, ranura)**, de modo que cualquier combinación de grupos de un semestre es siempre sin cruces.
 - **Reglas de conflicto**: choque estudiante = descartar la *electiva* antes que la *fundamental*; horas administrativas obligatorias (exactas); 1 docente por grupo; docente sin materias asignadas no dicta nada.
 - **Flujo del estudiante**: eligen materias y el sistema arma su mejor horario **a partir de la generación global** (sin cruces por solape de intervalos).
-- **Login / roles**: administrador autenticado contra la base de datos (hash PBKDF2); el estudiante entra con un botón. Credenciales por defecto: `admin` / `admin123` (seed idempotente al arrancar).
+- **Materias reprobadas y prerrequisitos**: desde "Nuevo horario" el estudiante indica su semestre y las materias que repite; las materias que tengan como prerrequisito una reprobada quedan bloqueadas.
+- **Login / roles**: administrador autenticado contra la base de datos (hash PBKDF2); los estudiantes se autorregistran con correo, contraseña y semestre, y reciben un token de sesión firmado. Credenciales de administrador por defecto: `admin` / `admin123` (seed idempotente al arrancar).
 
 ## Estructura
 
@@ -43,3 +44,4 @@ El backend está listo para Render (blueprint en `backend/render.yaml`, versión
 - Endpoint de salud: `GET /health` → `{"status": "healthy"}` (útil para un cron externo que mantenga despierta la instancia gratis).
 - La BD (Neon) se conecta por la variable de entorno `DATABASE_URL` (con `?sslmode=require`).
 - El frontend apunta al backend mediante `VITE_API_URL`.
+- Define `SECRET_KEY` en el backend (variable de entorno) para firmar los tokens de sesión de los estudiantes.

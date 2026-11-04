@@ -24,7 +24,8 @@ export default function Sidebar({
   const location = useLocation();
   const rol = getRol();
   const colapsado = !pcAbierto;
-  const usuario = rol === 'estudiante' ? 'Estudiante' : localStorage.getItem('username') || 'Admin';
+  const username = localStorage.getItem('username');
+  const usuario = username || (rol === 'estudiante' ? 'Estudiante' : 'Admin');
 
   const irA = (path) => {
     navigate(path);
@@ -42,8 +43,11 @@ export default function Sidebar({
   const menuItems = todosItems.filter((item) => item.roles.includes(rol));
 
   const salir = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario_id');
     localStorage.removeItem('rol');
     localStorage.removeItem('username');
+    localStorage.removeItem('semestre');
     navigate('/login');
     onCerrar();
   };

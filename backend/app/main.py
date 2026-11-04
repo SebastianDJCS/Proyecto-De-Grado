@@ -35,6 +35,7 @@ def _migraciones_ligeras() -> None:
     """Agrega columnas nuevas a tablas existentes (create_all no las añade)."""
     inspector = inspect(engine)
     tablas = inspector.get_table_names()
+    dialecto = engine.dialect.name
 
     if "asignaturas" in tablas:
         columnas = {col["name"] for col in inspector.get_columns("asignaturas")}
@@ -58,13 +59,23 @@ def _migraciones_ligeras() -> None:
                         "ADD COLUMN secciones_por_grupo INTEGER NOT NULL DEFAULT 1"
                     )
                 )
-                conn.execute(
-                    text(
-                        "UPDATE asignaturas "
-                        "SET secciones_por_grupo = GREATEST(1, CEIL(horas_semanales::numeric / 2)) "
-                        "WHERE horas_semanales > 0"
+                if dialecto == "postgresql":
+                    conn.execute(
+                        text(
+                            "UPDATE asignaturas "
+                            "SET secciones_por_grupo = GREATEST(1, CEIL(horas_semanales::numeric / 2)) "
+                            "WHERE horas_semanales > 0"
+                        )
                     )
-                )
+                else:
+                    # SQLite: MAX escalar y división entera equivalen a GREATEST/CEIL.
+                    conn.execute(
+                        text(
+                            "UPDATE asignaturas "
+                            "SET secciones_por_grupo = MAX(1, (horas_semanales + 1) / 2) "
+                            "WHERE horas_semanales > 0"
+                        )
+                    )
             logger.info("Migración: columna 'secciones_por_grupo' creada.")
 
         if "horas_por_seccion" not in columnas:
@@ -78,17 +89,57 @@ def _migraciones_ligeras() -> None:
                 )
                 # Inferir la duración real de cada sección a partir de las horas
                 # semanales y las secciones existentes (limitado al rango 1-3).
-                conn.execute(
-                    text(
-                        "UPDATE asignaturas "
-                        "SET horas_por_seccion = LEAST(3, GREATEST(1, "
-                        "  CASE WHEN secciones_por_grupo > 0 "
-                        "       THEN ROUND(horas_semanales::numeric / secciones_por_grupo) "
-                        "       ELSE 2 END)) "
-                        "WHERE horas_semanales > 0"
+                if dialecto == "postgresql":
+                    conn.execute(
+                        text(
+                            "UPDATE asignaturas "
+                            "SET horas_por_seccion = LEAST(3, GREATEST(1, "
+                            "  CASE WHEN secciones_por_grupo > 0 "
+                            "       THEN ROUND(horas_semanales::numeric / secciones_por_grupo) "
+                            "       ELSE 2 END)) "
+                            "WHERE horas_semanales > 0"
+                        )
                     )
-                )
+                else:
+                    conn.execute(
+                        text(
+                            "UPDATE asignaturas "
+                            "SET horas_por_seccion = MIN(3, MAX(1, "
+                            "  CASE WHEN secciones_por_grupo > 0 "
+                            "       THEN CAST(ROUND(horas_semanales * 1.0 / secciones_por_grupo) AS INTEGER) "
+                            "       ELSE 2 END)) "
+                            "WHERE horas_semanales > 0"
+                        )
+                    )
             logger.info("Migración: columna 'horas_por_seccion' creada.")
+
+    if "usuarios" in tablas:
+        columnas_usuario = {
+            col["name"]: col for col in inspector.get_columns("usuarios")
+        }
+        if "semestre" not in columnas_usuario:
+            logger.info("Migración: agregando columna 'semestre' a la tabla usuarios...")
+            with engine.begin() as conn:
+                conn.execute(
+                    text("ALTER TABLE usuarios ADD COLUMN semestre INTEGER")
+                )
+            logger.info("Migración: columna 'semestre' creada.")
+
+        col_username = columnas_usuario.get("username")
+        longitud = getattr(col_username.get("type"), "length", None) if col_username else None
+        if longitud is not None and longitud < 255:
+            if dialecto == "postgresql":
+                logger.info("Migración: ampliando 'username' a VARCHAR(255)...")
+                with engine.begin() as conn:
+                    conn.execute(
+                        text("ALTER TABLE usuarios ALTER COLUMN username TYPE VARCHAR(255)")
+                    )
+                logger.info("Migración: columna 'username' ampliada.")
+            else:
+                logger.info(
+                    "Migración: %s no exige longitud en 'username'; se omite.",
+                    dialecto,
+                )
 
 
 def _seed_admin() -> None:

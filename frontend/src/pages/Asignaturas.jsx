@@ -75,14 +75,25 @@ export default function Asignaturas() {
     setIsModalOpen(true);
   };
 
-  const etiquetas = (asig) => (
-    <div className="mt-1.5 flex flex-wrap gap-1">
-      <Badge tone={asig.tipo === 'ELECTIVA' ? 'warning' : 'neutral'}>
-        {asig.tipo === 'ELECTIVA' ? 'Electiva' : 'Fundamental'}
-      </Badge>
-      {asig.seleccionable && <Badge tone="success">Disponible para estudiantes</Badge>}
-    </div>
-  );
+  const etiquetas = (asig) => {
+    const prerequisitos = (asig.prerequisito_ids || [])
+      .map((id) => asignaturas.find((a) => a.id === id))
+      .filter(Boolean);
+
+    return (
+      <div className="mt-1.5 flex flex-wrap gap-1">
+        <Badge tone={asig.tipo === 'ELECTIVA' ? 'warning' : 'neutral'}>
+          {asig.tipo === 'ELECTIVA' ? 'Electiva' : 'Fundamental'}
+        </Badge>
+        {asig.seleccionable && <Badge tone="success">Disponible para estudiantes</Badge>}
+        {prerequisitos.length > 0 && (
+          <Badge tone="brand">
+            Requiere: {prerequisitos.map((p) => p.nombre).join(', ')}
+          </Badge>
+        )}
+      </div>
+    );
+  };
 
   const carga = (asig) => (
     <div className="text-xs text-muted">
@@ -221,7 +232,11 @@ export default function Asignaturas() {
       </div>
 
       <Modal open={isModalOpen} onClose={() => { setIsModalOpen(false); setAsignaturaAEditar(null); }}>
-        <AsignaturaForm asignaturaToEdit={asignaturaAEditar} onSuccess={handleFormSuccess} />
+        <AsignaturaForm
+          asignaturaToEdit={asignaturaAEditar}
+          catalogo={asignaturas}
+          onSuccess={handleFormSuccess}
+        />
       </Modal>
     </div>
   );

@@ -5,6 +5,14 @@ const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
 });
 
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // 1. Ejecutar el Solver CP-SAT (acepta semestre opcional)
 export const resolverHorarios = async (semestre = null) => {
   const payload = semestre ? { semestre: parseInt(semestre) } : {};
@@ -64,10 +72,22 @@ export const deleteAsignatura = async (id) => (await API.delete(`/asignaturas/${
 
 // --- ESTUDIANTE (Mi Horario) ---
 export const getConfigEstudiante = async () => (await API.get('/estudiante/config')).data;
-export const getAsignaturasSeleccionables = async () => (await API.get('/estudiante/asignaturas')).data;
+export const getPerfilEstudiante = async () => (await API.get('/estudiante/perfil')).data;
+export const updatePerfilEstudiante = async (data) =>
+  (await API.put('/estudiante/perfil', data)).data;
+export const getCatalogoAnterior = async (antesDe) =>
+  (await API.get('/estudiante/catalogo', { params: { antes_de: antesDe } })).data;
+export const getAsignaturasSeleccionables = async (semestre = null) =>
+  (
+    await API.get('/estudiante/asignaturas', {
+      params: semestre ? { semestre } : {},
+    })
+  ).data;
 export const generarHorarioEstudiante = async (asignaturaIds) =>
   (await API.post('/estudiante/horario', { asignatura_ids: asignaturaIds })).data;
 
 // --- AUTENTICACIÓN ---
 export const login = async (username, password) =>
   (await API.post('/auth/login', { username, password })).data;
+export const registrarEstudiante = async (data) =>
+  (await API.post('/auth/registro', data)).data;

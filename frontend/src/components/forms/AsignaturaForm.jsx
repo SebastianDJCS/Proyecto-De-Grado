@@ -3,10 +3,14 @@ import { Save, Loader2 } from 'lucide-react';
 import { createAsignatura, updateAsignatura } from '../../services/api';
 import { Alert, fieldClass, labelClass } from '../ui';
 
-export default function AsignaturaForm({ asignaturaToEdit, onSuccess }) {
+export default function AsignaturaForm({ asignaturaToEdit, catalogo = [], onSuccess }) {
   const [formData, setFormData] = useState(() =>
     asignaturaToEdit
-      ? { ...asignaturaToEdit, num_secciones: asignaturaToEdit.secciones ?? 0 }
+      ? {
+          ...asignaturaToEdit,
+          num_secciones: asignaturaToEdit.secciones ?? 0,
+          prerequisito_ids: asignaturaToEdit.prerequisito_ids || [],
+        }
       : {
           codigo_uccd: '',
           nombre: '',
@@ -19,6 +23,7 @@ export default function AsignaturaForm({ asignaturaToEdit, onSuccess }) {
           secciones_por_grupo: 1,
           horas_por_seccion: 2,
           estudiantes_por_seccion: '',
+          prerequisito_ids: [],
         }
   );
 
@@ -32,6 +37,28 @@ export default function AsignaturaForm({ asignaturaToEdit, onSuccess }) {
       [name]: type === 'checkbox' ? checked : value,
     });
   };
+
+  const togglePrerequisito = (id) => {
+    setFormData((prev) => {
+      const actuales = prev.prerequisito_ids || [];
+      return {
+        ...prev,
+        prerequisito_ids: actuales.includes(id)
+          ? actuales.filter((x) => x !== id)
+          : [...actuales, id],
+      };
+    });
+  };
+
+  const materiasPrerequisito = catalogo
+    .filter((asignatura) => asignatura.id !== asignaturaToEdit?.id)
+    .sort((a, b) => a.semestre - b.semestre || a.nombre.localeCompare(b.nombre));
+
+  const prerequisitosPorSemestre = materiasPrerequisito.reduce((acc, materia) => {
+    if (!acc[materia.semestre]) acc[materia.semestre] = [];
+    acc[materia.semestre].push(materia);
+    return acc;
+  }, {});
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -207,6 +234,61 @@ export default function AsignaturaForm({ asignaturaToEdit, onSuccess }) {
           <p className="mt-1.5 text-[11px] text-faint">
             En conflictos de horario del estudiante, se descarta la electiva antes que la fundamental.
           </p>
+        </div>
+
+        <div>
+          <label className={labelClass}>Materias prerrequisito</label>
+          <p className="mb-2 text-[11px] text-faint">
+            Si el estudiante reprobó alguna de estas materias, esta asignatura se bloqueará
+            automáticamente en su horario.
+          </p>
+          {materiasPrerequisito.length === 0 ? (
+            <p className="rounded-md border border-line bg-canvas/60 px-3 py-2 text-xs text-faint">
+              No hay otras materias registradas para usar como prerrequisito.
+            </p>
+          ) : (
+            <div className="max-h-56 space-y-3 overflow-y-auto rounded-md border border-line bg-canvas/40 p-3">
+              {Object.entries(prerequisitosPorSemestre)
+                .sort(([a], [b]) => Number(a) - Number(b))
+                .map(([numero, lista]) => (
+                  <div key={numero}>
+                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
+                      Semestre {numero}
+                    </p>
+                    <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                      {lista.map((materia) => {
+                        const activa = (formData.prerequisito_ids || []).includes(materia.id);
+                        return (
+                          <label
+                            key={materia.id}
+                            className={`flex cursor-pointer items-start gap-2 rounded-md border p-2.5 text-xs transition-colors ${
+                              activa
+                                ? 'border-brand-600 bg-brand-50/70 text-ink'
+                                : 'border-line bg-surface text-muted hover:border-line-strong'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={activa}
+                              onChange={() => togglePrerequisito(materia.id)}
+                              className="mt-0.5 h-3.5 w-3.5 rounded-sm border-line-strong accent-brand-600"
+                            />
+                            <span className="min-w-0">
+                              <span className="block font-mono text-[10px] uppercase text-faint">
+                                {materia.codigo_uccd}
+                              </span>
+                              <span className="block font-medium text-ink">
+                                {materia.nombre}
+                              </span>
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
         </div>
 
         <div className={asignaturaToEdit ? '' : 'grid grid-cols-1 gap-4 sm:grid-cols-2'}>
