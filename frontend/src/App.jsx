@@ -8,6 +8,7 @@ import Salones from './pages/Salones';
 import Asignaturas from './pages/Asignaturas';
 import MiHorario from './pages/MiHorario';
 import LoginPage from './pages/LoginPage';
+import RegistroPage from './pages/RegistroPage';
 import logoUn from './assets/img.png';
 
 const getRol = () => localStorage.getItem('rol') || 'invitado';
@@ -33,7 +34,8 @@ export default function App() {
 
 function Contenido() {
   const { pathname } = useLocation();
-  const enLogin = pathname.replace(/\/+$/, '') === '/login';
+  const rutaLimpia = pathname.replace(/\/+$/, '');
+  const enLogin = rutaLimpia === '/login' || rutaLimpia === '/registro';
   const [drawerAbierto, setDrawerAbierto] = useState(false);
   // Recordar si la barra lateral quedo colapsada (mini-barra)
   const [sidebarPc, setSidebarPc] = useState(() => localStorage.getItem('sidebarColapsado') !== '1');
@@ -101,6 +103,7 @@ function Contenido() {
         )}
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/registro" element={<RegistroPage />} />
 
           <Route
             path="/"

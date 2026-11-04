@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, Loader2, AlertCircle, GraduationCap } from 'lucide-react';
+import { LogIn, Loader2, AlertCircle, GraduationCap, ArrowRight } from 'lucide-react';
 import { login } from '../services/api';
 import { branding } from '../config/branding';
 import logoUn from '../assets/img.png';
@@ -18,21 +18,22 @@ export default function LoginPage() {
     setError(null);
     try {
       const data = await login(username, password);
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('usuario_id', String(data.id));
       localStorage.setItem('rol', data.rol);
       localStorage.setItem('username', data.username);
-      navigate('/');
+      if (data.semestre != null) {
+        localStorage.setItem('semestre', String(data.semestre));
+      } else {
+        localStorage.removeItem('semestre');
+      }
+      navigate(data.rol === 'estudiante' ? '/mi-horario' : '/');
     } catch (err) {
       console.error(err);
-      setError('Credenciales incorrectas. Verifica tu usuario y contraseña.');
+      setError('Credenciales incorrectas. Verifica tu correo y contraseña.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const ingresarComoEstudiante = () => {
-    localStorage.setItem('rol', 'estudiante');
-    localStorage.removeItem('username');
-    navigate('/mi-horario');
   };
 
   return (
@@ -87,7 +88,7 @@ export default function LoginPage() {
 
           <h2 className="font-serif text-3xl leading-tight text-ink sm:text-4xl">Iniciar sesión</h2>
           <p className="mt-2 text-sm text-muted">
-            Ingresa con las credenciales asignadas a tu cuenta.
+            Ingresa con tu correo y contraseña, o con la cuenta de administrador.
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
@@ -96,7 +97,7 @@ export default function LoginPage() {
                 htmlFor="username"
                 className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted"
               >
-                Usuario
+                Correo electrónico
               </label>
               <input
                 id="username"
@@ -104,7 +105,8 @@ export default function LoginPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                placeholder="admin"
+                autoComplete="username"
+                placeholder="correo@ejemplo.com"
                 className="w-full rounded-md border border-line-strong bg-surface px-3.5 py-2.5 text-sm text-ink transition-colors placeholder:text-faint focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/15"
               />
             </div>
@@ -162,15 +164,16 @@ export default function LoginPage() {
 
           <button
             type="button"
-            onClick={ingresarComoEstudiante}
+            onClick={() => navigate('/registro')}
             className="flex w-full items-center justify-center gap-2 rounded-md border border-line-strong bg-surface py-2.5 text-sm font-semibold text-ink transition-colors hover:border-muted hover:bg-canvas"
           >
             <GraduationCap className="h-4 w-4 text-brand-700" />
-            Entrar como estudiante
+            Crear cuenta de estudiante
+            <ArrowRight className="h-3.5 w-3.5 text-faint" />
           </button>
 
           <p className="mt-4 text-center text-[11px] leading-relaxed text-faint">
-            Como estudiante podrás generar tu horario personal.
+            Regístrate con tu correo, contraseña y semestre actual.
             Los administradores gestionan docentes, asignaturas y salones.
           </p>
         </div>

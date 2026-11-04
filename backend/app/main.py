@@ -90,6 +90,28 @@ def _migraciones_ligeras() -> None:
                 )
             logger.info("Migración: columna 'horas_por_seccion' creada.")
 
+    if "usuarios" in tablas:
+        columnas_usuario = {
+            col["name"]: col for col in inspector.get_columns("usuarios")
+        }
+        if "semestre" not in columnas_usuario:
+            logger.info("Migración: agregando columna 'semestre' a la tabla usuarios...")
+            with engine.begin() as conn:
+                conn.execute(
+                    text("ALTER TABLE usuarios ADD COLUMN semestre INTEGER")
+                )
+            logger.info("Migración: columna 'semestre' creada.")
+
+        col_username = columnas_usuario.get("username")
+        longitud = getattr(col_username.get("type"), "length", None) if col_username else None
+        if longitud is not None and longitud < 255:
+            logger.info("Migración: ampliando 'username' a VARCHAR(255)...")
+            with engine.begin() as conn:
+                conn.execute(
+                    text("ALTER TABLE usuarios ALTER COLUMN username TYPE VARCHAR(255)")
+                )
+            logger.info("Migración: columna 'username' ampliada.")
+
 
 def _seed_admin() -> None:
     """Crea el usuario administrador por defecto si no existe (idempotente)."""

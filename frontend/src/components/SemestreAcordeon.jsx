@@ -8,7 +8,6 @@ export default function SemestreAcordeon({
   onToggle,
   abierto,
   onToggleAcordeon,
-  semestreActual,
   creditosRestantes,
 }) {
   const seleccionadasSet = new Set(seleccionadas);
@@ -31,11 +30,21 @@ export default function SemestreAcordeon({
                 : 'border-line bg-canvas text-ink'
             }`}
           >
-            {semestre === 'Otros' ? '·' : semestre}
+            {semestre === 'Otros' || semestre === 'Todas'
+              ? '·'
+              : semestre === 'Repites'
+              ? 'R'
+              : semestre}
           </span>
           <div>
             <h3 className="font-semibold text-ink">
-              {semestre === 'Otros' ? 'Otras materias' : `Semestre ${semestre}`}
+              {semestre === 'Otros'
+                ? 'Otras materias'
+                : semestre === 'Todas'
+                ? 'Todas las materias'
+                : semestre === 'Repites'
+                ? 'Materias que repites'
+                : `Semestre ${semestre}`}
             </h3>
             <p className="text-xs text-muted">
               {materias.length} materia(s)
@@ -77,9 +86,8 @@ export default function SemestreAcordeon({
                   const activa = seleccionadasSet.has(m.id);
                   const sinHorario = m.grupos_programados === 0;
                   const excedeCreditos = !activa && m.creditos > creditosRestantes;
-                  const bloqueada = sinHorario || excedeCreditos;
-                  const esRepeticion =
-                    semestreActual != null && m.semestre !== semestreActual;
+                  const bloqueada = sinHorario || excedeCreditos || m.bloqueada;
+                  const esRepeticion = m.es_reprobada;
 
                   return (
                     <motion.button
@@ -87,6 +95,7 @@ export default function SemestreAcordeon({
                       key={m.id}
                       onClick={() => !bloqueada && onToggle(m.id)}
                       disabled={bloqueada}
+                      title={m.motivo_bloqueo || undefined}
                       whileHover={!bloqueada ? { y: -2 } : undefined}
                       whileTap={!bloqueada ? { scale: 0.98 } : undefined}
                       className={`relative flex flex-col gap-2 rounded-md border p-3.5 text-left transition-colors ${
@@ -156,6 +165,12 @@ export default function SemestreAcordeon({
                       {esRepeticion && (
                         <span className="inline-flex w-fit items-center gap-1 rounded-sm border border-[#e2d3a7] bg-[#fbf6e9] px-1.5 py-0.5 text-[10px] font-semibold text-[#6b5518]">
                           <Repeat className="h-2.5 w-2.5" /> Repetición
+                        </span>
+                      )}
+
+                      {m.bloqueada && m.motivo_bloqueo && !activa && (
+                        <span className="text-[10px] leading-snug text-red-700">
+                          {m.motivo_bloqueo}
                         </span>
                       )}
 

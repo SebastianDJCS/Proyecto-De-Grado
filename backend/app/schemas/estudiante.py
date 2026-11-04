@@ -26,6 +26,38 @@ class AsignaturaSeleccionableItem(BaseModel):
     grupos: int
     grupos_programados: int
     tipo: str = "FUNDAMENTAL"
+    es_reprobada: bool = False
+    bloqueada: bool = False
+    motivo_bloqueo: Optional[str] = None
+    prerequisitos: List[str] = []
+
+
+class MateriaReprobadaItem(BaseModel):
+    id: int
+    codigo_uccd: str
+    nombre: str
+    semestre: int
+
+
+class PerfilEstudianteResponse(BaseModel):
+    id: int
+    email: str
+    semestre: Optional[int] = None
+    materias_reprobadas: List[MateriaReprobadaItem] = []
+
+
+class PerfilEstudianteUpdate(BaseModel):
+    semestre: int = Field(ge=1, le=10)
+    materias_reprobadas: List[int] = []
+
+
+class CatalogoMateriaItem(BaseModel):
+    """Materia de un semestre anterior, usada para marcar reprobadas."""
+
+    id: int
+    codigo_uccd: str
+    nombre: str
+    semestre: int
 
 
 class BloqueHorarioItem(BaseModel):

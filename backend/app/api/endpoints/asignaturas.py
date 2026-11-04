@@ -9,6 +9,27 @@ from app.schemas import AsignaturaCreate, AsignaturaResponse, AsignaturaUpdate
 router = APIRouter(prefix="/asignaturas", tags=["Asignaturas"])
 
 
+def _resolver_prerequisitos(
+    db: Session,
+    prerequisito_ids: List[int],
+    asignatura_id: int | None = None,
+) -> List[Asignatura]:
+    """Valida y devuelve las materias prerrequisito indicadas."""
+    ids = [i for i in dict.fromkeys(prerequisito_ids or []) if i != asignatura_id]
+    if not ids:
+        return []
+
+    asignaturas = db.query(Asignatura).filter(Asignatura.id.in_(ids)).all()
+    encontradas = {a.id for a in asignaturas}
+    faltantes = [i for i in ids if i not in encontradas]
+    if faltantes:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Asignaturas prerrequisito no encontradas: {faltantes}",
+        )
+    return asignaturas
+
+
 def _crear_grupo(
     asignatura_id: int,
     numero: int,
@@ -71,7 +92,10 @@ def obtener_asignaturas(skip: int = 0, limit: int = 100, db: Session = Depends(g
     """Obtener la lista de todas las asignaturas."""
     return (
         db.query(Asignatura)
-        .options(joinedload(Asignatura.grupos_proyectados))
+        .options(
+            joinedload(Asignatura.grupos_proyectados),
+            joinedload(Asignatura.prerequisitos),
+        )
         .offset(skip)
         .limit(limit)
         .all()
@@ -91,10 +115,15 @@ def crear_asignatura(asignatura: AsignaturaCreate, db: Session = Depends(get_db)
     datos = asignatura.model_dump()
     num_secciones = datos.pop("num_secciones", 1)
     estudiantes_por_seccion = datos.pop("estudiantes_por_seccion", 0)
+    prerequisito_ids = datos.pop("prerequisito_ids", [])
 
     nueva_asignatura = Asignatura(**datos)
     db.add(nueva_asignatura)
     db.flush()
+
+    nueva_asignatura.prerequisitos = _resolver_prerequisitos(
+        db, prerequisito_ids, nueva_asignatura.id
+    )
 
     for numero in range(1, num_secciones + 1):
         db.add(
@@ -133,9 +162,15 @@ def actualizar_asignatura(
     datos = asignatura_update.model_dump(exclude_unset=True)
     num_secciones = datos.pop("num_secciones", None)
     estudiantes_por_seccion = datos.pop("estudiantes_por_seccion", None)
+    prerequisito_ids = datos.pop("prerequisito_ids", None)
 
     for key, value in datos.items():
         setattr(db_asignatura, key, value)
+
+    if prerequisito_ids is not None:
+        db_asignatura.prerequisitos = _resolver_prerequisitos(
+            db, prerequisito_ids, db_asignatura.id
+        )
 
     if num_secciones is not None:
         _ajustar_secciones(db, db_asignatura, num_secciones, estudiantes_por_seccion)
