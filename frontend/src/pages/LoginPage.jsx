@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LogIn, Loader2, AlertCircle, GraduationCap, ArrowRight } from 'lucide-react';
 import { login } from '../services/api';
 import { branding } from '../config/branding';
-import logoUn from '../assets/img.png';
+import Logo from '../components/brand/Logo';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -53,7 +53,7 @@ export default function LoginPage() {
 
         <div className="relative z-10 flex h-full flex-col justify-between">
           <div className="w-fit rounded-md bg-white p-2.5">
-            <img src={logoUn} alt="Uninúñez" className="h-14 w-14 object-contain" />
+            <Logo variant="horizontal" size="lg" />
           </div>
 
           <div className="max-w-md py-12">
@@ -77,12 +77,10 @@ export default function LoginPage() {
       <main className="flex flex-1 items-center justify-center px-5 py-10 sm:px-8">
         <div className="w-full max-w-[420px]">
           <div className="mb-10 flex items-center gap-3 lg:hidden">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-line bg-white p-1.5">
-              <img src={logoUn} alt="Uninúñez" className="h-full w-full object-contain" />
-            </span>
+            <Logo variant="mark" size="md" />
             <div>
               <p className="text-sm font-semibold leading-tight text-ink">Optimizador de Horarios</p>
-              <p className="text-[11px] uppercase tracking-[0.16em] text-brand-700">Uninúñez</p>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-brand-800">Uninúñez</p>
             </div>
           </div>
 
@@ -107,7 +105,7 @@ export default function LoginPage() {
                 required
                 autoComplete="username"
                 placeholder="correo@ejemplo.com"
-                className="w-full rounded-md border border-line-strong bg-surface px-3.5 py-2.5 text-sm text-ink transition-colors placeholder:text-faint focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/15"
+                className="w-full rounded-md border border-line-strong bg-surface px-3.5 py-2.5 text-sm text-ink transition-colors placeholder:text-faint focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
               />
             </div>
 
@@ -125,12 +123,12 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="••••••••"
-                className="w-full rounded-md border border-line-strong bg-surface px-3.5 py-2.5 text-sm text-ink transition-colors placeholder:text-faint focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/15"
+                className="w-full rounded-md border border-line-strong bg-surface px-3.5 py-2.5 text-sm text-ink transition-colors placeholder:text-faint focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
               />
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-700">
+              <div className="flex items-center gap-2 rounded-md border border-danger-border bg-danger-bg px-3 py-2.5 text-xs text-danger-text">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>{error}</span>
               </div>
@@ -139,7 +137,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-md border border-brand-700 bg-brand-700 py-2.5 text-sm font-semibold text-white transition-colors hover:border-brand-800 hover:bg-brand-800 disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-2 rounded-md border border-un-onyx bg-un-onyx py-2.5 text-sm font-semibold text-white transition-colors hover:border-un-ash hover:bg-un-ash disabled:opacity-60"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -167,7 +165,7 @@ export default function LoginPage() {
             onClick={() => navigate('/registro')}
             className="flex w-full items-center justify-center gap-2 rounded-md border border-line-strong bg-surface py-2.5 text-sm font-semibold text-ink transition-colors hover:border-muted hover:bg-canvas"
           >
-            <GraduationCap className="h-4 w-4 text-brand-700" />
+            <GraduationCap className="h-4 w-4 text-brand-800" />
             Crear cuenta de estudiante
             <ArrowRight className="h-3.5 w-3.5 text-faint" />
           </button>

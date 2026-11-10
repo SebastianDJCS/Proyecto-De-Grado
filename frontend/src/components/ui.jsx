@@ -1,20 +1,20 @@
 import { X } from 'lucide-react';
 
 export const fieldClass =
-  'w-full rounded-md border border-line-strong bg-surface px-3 py-2 text-sm text-ink placeholder:text-faint transition-colors focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/15';
+  'w-full rounded-md border border-line-strong bg-surface px-3 py-2 text-sm text-ink placeholder:text-faint transition-colors focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20';
 
 export const labelClass =
   'mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted';
 
 const buttonVariants = {
   primary:
-    'border-brand-700 bg-brand-700 text-white hover:border-brand-800 hover:bg-brand-800',
+    'border-un-onyx bg-un-onyx text-white hover:border-un-ash hover:bg-un-ash',
   secondary:
-    'border-line-strong bg-surface text-ink hover:border-muted hover:bg-canvas',
+    'border-brand-600 bg-surface text-brand-800 hover:border-brand-700 hover:bg-brand-50',
   ghost:
     'border-transparent bg-transparent text-muted hover:bg-surface hover:text-ink',
   danger:
-    'border-line-strong bg-surface text-red-700 hover:border-red-200 hover:bg-red-50',
+    'border-line-strong bg-surface text-danger-text hover:border-danger-border hover:bg-danger-bg',
 };
 
 export function Button({ variant = 'primary', className = '', type = 'button', ...props }) {
@@ -29,7 +29,8 @@ export function Button({ variant = 'primary', className = '', type = 'button', .
 
 const iconTones = {
   neutral: 'text-muted hover:border-line-strong hover:bg-canvas hover:text-ink',
-  danger: 'text-muted hover:border-red-200 hover:bg-red-50 hover:text-red-700',
+  danger:
+    'text-muted hover:border-danger-border hover:bg-danger-bg hover:text-danger-text',
 };
 
 export function IconButton({ label, tone = 'neutral', className = '', type = 'button', ...props }) {
@@ -47,10 +48,11 @@ export function IconButton({ label, tone = 'neutral', className = '', type = 'bu
 const badgeTones = {
   neutral: 'border-line bg-canvas text-muted',
   brand: 'border-brand-200 bg-brand-50 text-brand-800',
-  success: 'border-[#c8dcc3] bg-[#eff5ec] text-[#3f6b3a]',
-  warning: 'border-[#e2d3a7] bg-[#fbf6e9] text-[#6b5518]',
-  danger: 'border-red-200 bg-red-50 text-red-700',
-  ink: 'border-ink bg-ink text-white',
+  success: 'border-success-border bg-success-bg text-success-text',
+  warning: 'border-warning-border bg-warning-bg text-warning-text',
+  info: 'border-info-border bg-info-bg text-info-text',
+  danger: 'border-danger-border bg-danger-bg text-danger-text',
+  ink: 'border-un-onyx bg-un-onyx text-white',
 };
 
 export function Badge({ tone = 'neutral', className = '', children }) {
@@ -64,10 +66,10 @@ export function Badge({ tone = 'neutral', className = '', children }) {
 }
 
 const alertTones = {
-  info: 'border-line bg-canvas text-muted',
-  success: 'border-[#c8dcc3] bg-[#eff5ec] text-[#345c30]',
-  warning: 'border-[#e2d3a7] bg-[#fbf6e9] text-[#6b5518]',
-  danger: 'border-red-200 bg-red-50 text-red-700',
+  info: 'border-info-border bg-info-bg text-info-text',
+  success: 'border-success-border bg-success-bg text-success-text',
+  warning: 'border-warning-border bg-warning-bg text-warning-text',
+  danger: 'border-danger-border bg-danger-bg text-danger-text',
 };
 
 export function Alert({ tone = 'info', className = '', children }) {
@@ -83,7 +85,7 @@ export function PageHeader({ kicker, title, description, actions }) {
     <header className="mb-6 flex flex-col gap-4 border-b border-line pb-6 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         {kicker && (
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-800">
             {kicker}
           </p>
         )}

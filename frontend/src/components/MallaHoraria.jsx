@@ -133,7 +133,7 @@ export const MallaHoraria = ({ horarios = [] }) => {
                       // Detectar si la asignación es una Labor Administrativa
                       const esAdmin = esAdminItem(item);
                       const sesion = etiquetasSesion.get(item);
-                      const secundario = esAdmin ? 'text-[#7a6535]' : 'text-muted';
+                      const secundario = esAdmin ? 'text-info-text' : 'text-muted';
 
                       return (
                         <div
@@ -147,7 +147,7 @@ export const MallaHoraria = ({ horarios = [] }) => {
                           }}
                           className={`flex flex-col justify-between overflow-hidden rounded-sm border border-l-2 p-1.5 text-left text-[11px] shadow-sm transition-shadow hover:z-30 hover:shadow-md ${
                             esAdmin
-                              ? 'border-[#e0d3ae] border-l-[#b58a2c] bg-[#fbf6e9] text-[#5f4b1a]'
+                              ? 'border-info-border border-l-un-teal bg-info-bg text-info-text'
                               : 'border-brand-200 border-l-brand-600 bg-brand-50 text-ink'
                           }`}
                         >
@@ -157,7 +157,7 @@ export const MallaHoraria = ({ horarios = [] }) => {
                               <span
                                 className={`inline-block rounded-sm px-1 py-px text-[9px] font-semibold uppercase tracking-[0.06em] ${
                                   esAdmin
-                                    ? 'bg-[#e0d3ae] text-[#5f4b1a]'
+                                    ? 'bg-info-border text-info-text'
                                     : 'bg-brand-200 text-brand-900'
                                 }`}
                               >
@@ -177,7 +177,7 @@ export const MallaHoraria = ({ horarios = [] }) => {
                             </p>
                           </div>
 
-                          <div className={`border-t pt-0.5 text-[10px] ${esAdmin ? 'border-[#e0d3ae]' : 'border-brand-200'} ${secundario}`}>
+                          <div className={`border-t pt-0.5 text-[10px] ${esAdmin ? 'border-info-border' : 'border-brand-200'} ${secundario}`}>
                             <p className="flex items-center gap-1 truncate">
                               <MapPin className="h-2.5 w-2.5 shrink-0" />
                               <span className="truncate">{item.salon_nombre || item.salon || 'Sin salón'}</span>

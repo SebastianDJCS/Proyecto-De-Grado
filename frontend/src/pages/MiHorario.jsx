@@ -324,7 +324,7 @@ export default function MiHorario() {
                   </span>
                   <span
                     className={`tabular font-semibold ${
-                      creditosRestantes < 0 ? 'text-red-700' : 'text-ink'
+                      creditosRestantes < 0 ? 'text-danger-text' : 'text-ink'
                     }`}
                   >
                     {creditosTotales} / {maxCreditos}
@@ -333,7 +333,7 @@ export default function MiHorario() {
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-line">
                   <div
                     className={`h-full rounded-full transition-all duration-300 ${
-                      creditosRestantes < 0 ? 'bg-red-600' : 'bg-brand-600'
+                      creditosRestantes < 0 ? 'bg-danger-text' : 'bg-brand-600'
                     }`}
                     style={{ width: `${porcentaje}%` }}
                   />
@@ -394,8 +394,8 @@ export default function MiHorario() {
       )}
 
       {resultado && resultado.status === 'REQUIERE_SELECCION' && (
-        <section className="mt-5 space-y-4 rounded-lg border border-[#e2d3a7] bg-[#fbf6e9] p-5">
-          <div className="flex items-start gap-2.5 text-[#6b5518]">
+        <section className="mt-5 space-y-4 rounded-lg border border-warning-border bg-warning-bg p-5">
+          <div className="flex items-start gap-2.5 text-warning-text">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
               <p className="text-sm font-semibold">{resultado.mensaje}</p>
@@ -409,7 +409,7 @@ export default function MiHorario() {
             {resultado.pares_conflicto?.map((par, i) => (
               <div
                 key={`${par.a_id}-${par.b_id}-${i}`}
-                className="flex flex-col justify-between gap-3 rounded-md border border-[#e2d3a7] bg-surface p-3.5 md:flex-row md:items-center"
+                className="flex flex-col justify-between gap-3 rounded-md border border-warning-border bg-surface p-3.5 md:flex-row md:items-center"
               >
                 <span className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-ink">
                   {par.a}
@@ -451,10 +451,10 @@ export default function MiHorario() {
           <div
             className={`flex items-start gap-2.5 rounded-lg border p-4 text-sm ${
               resultado.status === 'OK'
-                ? 'border-[#c8dcc3] bg-[#eff5ec] text-[#345c30]'
+                ? 'border-success-border bg-success-bg text-success-text'
                 : resultado.status === 'PARCIAL'
-                ? 'border-[#e2d3a7] bg-[#fbf6e9] text-[#6b5518]'
-                : 'border-red-200 bg-red-50 text-red-700'
+                ? 'border-warning-border bg-warning-bg text-warning-text'
+                : 'border-danger-border bg-danger-bg text-danger-text'
             }`}
           >
             {resultado.status === 'OK' ? (
@@ -510,7 +510,7 @@ export default function MiHorario() {
       <Modal open={modalAbierto} onClose={cerrarModal} maxWidth="max-w-xl">
         <div className="p-6 sm:p-8">
           <div className="mb-5 border-b border-line pb-4 pr-10">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-800">
               Nuevo horario
             </p>
             <h2 className="mt-1 font-serif text-2xl text-ink">
@@ -545,7 +545,7 @@ export default function MiHorario() {
                   ))}
                 </select>
                 {perfil?.semestre && semestre && parseInt(semestre, 10) !== perfil.semestre && (
-                  <p className="mt-1.5 text-[11px] text-[#6b5518]">
+                  <p className="mt-1.5 text-[11px] text-warning-text">
                     Se actualizará tu semestre de {perfil.semestre} a {semestre} en el sistema.
                   </p>
                 )}

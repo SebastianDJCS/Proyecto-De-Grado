@@ -5,25 +5,48 @@
   --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --color-brand-50: #fdf4ed;
-  --color-brand-100: #fae4d2;
-  --color-brand-200: #f4c5a3;
-  --color-brand-300: #ec9e6b;
-  --color-brand-400: #e1773d;
-  --color-brand-500: #d65d22;
-  --color-brand-600: #c2410c;
-  --color-brand-700: #9d350c;
-  --color-brand-800: #7d2c0d;
-  --color-brand-900: #65260e;
+  /* Naranja institucional Uninúñez */
+  --color-brand-50: #fff7ed;
+  --color-brand-100: #fdeacf;
+  --color-brand-200: #fad3a0;
+  --color-brand-300: #f7b968;
+  --color-brand-400: #f4a033;
+  --color-brand-500: #f39200; /* Naranja Claro Uninúñez */
+  --color-brand-600: #f07e10; /* Naranja Oscuro Uninúñez */
+  --color-brand-700: #b45a05;
+  --color-brand-800: #8c4503;
+  --color-brand-900: #6e3603;
 
-  --color-ink: #1c1f23;
-  --color-ink-soft: #2a2e33;
-  --color-canvas: #f5f4f1;
+  /* Paleta secundaria y complementaria Uninúñez */
+  --color-un-teal: #249a8c; /* Turquesa Oscuro */
+  --color-un-teal-light: #14aa9f; /* Turquesa Claro */
+  --color-un-jade: #2fac66; /* Verde Jade */
+  --color-un-lime: #8cc04d; /* Verde Lima */
+  --color-un-onyx: #3c3c3b; /* Ónix */
+  --color-un-ash: #575756; /* Gris Ceniza */
+
+  --color-ink: #3c3c3b;
+  --color-ink-soft: #4a4a49;
+  --color-canvas: #f6f6f5;
   --color-surface: #ffffff;
-  --color-line: #dedbd4;
-  --color-line-strong: #c9c5bc;
-  --color-muted: #666b72;
-  --color-faint: #9298a0;
+  --color-line: #e4e3e2;
+  --color-line-strong: #c9c8c7;
+  --color-muted: #575756;
+  --color-faint: #8a8a89;
+
+  /* Colores semánticos derivados de la paleta institucional */
+  --color-success-bg: #edf8f1;
+  --color-success-border: #c3e8d1;
+  --color-success-text: #1f7a45;
+  --color-warning-bg: #fff3e2;
+  --color-warning-border: #fad3a0;
+  --color-warning-text: #8c4503;
+  --color-danger-bg: #fcedec;
+  --color-danger-border: #f2c6c2;
+  --color-danger-text: #b3261e;
+  --color-info-bg: #eaf6f5;
+  --color-info-border: #b9e3df;
+  --color-info-text: #1b7268;
 }
 
 @layer base {
