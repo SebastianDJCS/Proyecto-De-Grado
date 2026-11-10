@@ -9,7 +9,7 @@ import Asignaturas from './pages/Asignaturas';
 import MiHorario from './pages/MiHorario';
 import LoginPage from './pages/LoginPage';
 import RegistroPage from './pages/RegistroPage';
-import logoUn from './assets/img.png';
+import Logo from './components/brand/Logo';
 
 const getRol = () => localStorage.getItem('rol') || 'invitado';
 
@@ -93,11 +93,14 @@ function Contenido() {
             >
               <Menu className="h-5 w-5" />
             </button>
-            <div className="flex items-center gap-2.5">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line bg-white">
-                <img src={logoUn} alt="Uninúñez" className="h-6 w-6 object-contain" />
-              </span>
-              <span className="text-sm font-semibold tracking-tight text-ink">Optimizador de Horarios</span>
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Logo variant="mark" size="sm" />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold tracking-tight text-ink">
+                  Optimizador de Horarios
+                </p>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-brand-800">Uninúñez</p>
+              </div>
             </div>
           </div>
         )}

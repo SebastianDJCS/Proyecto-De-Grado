@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Save, Loader2 } from 'lucide-react';
 import { createSalon, updateSalon } from '../../services/api';
 import { Alert, fieldClass, labelClass } from '../ui';
@@ -66,7 +66,7 @@ export default function SalonForm({ salonToEdit, onSuccess }) {
   return (
     <div className="p-6 sm:p-8">
       <div className="mb-6 border-b border-line pb-5 pr-10">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-800">
           {salonToEdit ? 'Edición' : 'Registro'}
         </p>
         <h2 className="mt-1 font-serif text-2xl text-ink">
@@ -166,7 +166,7 @@ export default function SalonForm({ salonToEdit, onSuccess }) {
         <button
           type="submit"
           disabled={loading}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-md border border-brand-700 bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:border-brand-800 hover:bg-brand-800 disabled:opacity-50"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-md border border-un-onyx bg-un-onyx px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:border-un-ash hover:bg-un-ash disabled:opacity-50"
         >
           {loading ? (
             <>
@@ -184,3 +184,4 @@ export default function SalonForm({ salonToEdit, onSuccess }) {
     </div>
   );
 }
+

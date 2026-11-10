@@ -49,7 +49,7 @@ export default function SemestreAcordeon({
             <p className="text-xs text-muted">
               {materias.length} materia(s)
               {tieneSeleccion && (
-                <span className="ml-1 text-brand-700">
+                <span className="ml-1 text-brand-800">
                   · {seleccionadasSemestre.length} elegida(s) · {creditosSemestre} créditos
                 </span>
               )}
@@ -133,7 +133,7 @@ export default function SemestreAcordeon({
                               initial={{ scale: 0.8, opacity: 0 }}
                               animate={{ scale: 1, opacity: 1 }}
                               exit={{ scale: 0.8, opacity: 0 }}
-                              className="flex shrink-0 items-center gap-1 rounded-sm bg-brand-600 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-white"
+                              className="flex shrink-0 items-center gap-1 rounded-sm bg-brand-200 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-brand-900"
                             >
                               <Check className="h-3 w-3" /> Elegida
                             </motion.span>
@@ -157,19 +157,19 @@ export default function SemestreAcordeon({
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3 text-faint" /> Sem. {m.semestre}
                         </span>
-                        <span className={sinHorario ? 'font-semibold text-red-700' : ''}>
+                        <span className={sinHorario ? 'font-semibold text-danger-text' : ''}>
                           {sinHorario ? 'Sin horario' : `${m.grupos_programados} sección(es)`}
                         </span>
                       </div>
 
                       {esRepeticion && (
-                        <span className="inline-flex w-fit items-center gap-1 rounded-sm border border-[#e2d3a7] bg-[#fbf6e9] px-1.5 py-0.5 text-[10px] font-semibold text-[#6b5518]">
+                        <span className="inline-flex w-fit items-center gap-1 rounded-sm border border-warning-border bg-warning-bg px-1.5 py-0.5 text-[10px] font-semibold text-warning-text">
                           <Repeat className="h-2.5 w-2.5" /> Repetición
                         </span>
                       )}
 
                       {m.bloqueada && m.motivo_bloqueo && !activa && (
-                        <span className="text-[10px] leading-snug text-red-700">
+                        <span className="text-[10px] leading-snug text-danger-text">
                           {m.motivo_bloqueo}
                         </span>
                       )}

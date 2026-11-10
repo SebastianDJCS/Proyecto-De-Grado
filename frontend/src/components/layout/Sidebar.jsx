@@ -10,7 +10,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
-import logoUn from '../../assets/img.png';
+import Logo from '../brand/Logo';
 
 const getRol = () => localStorage.getItem('rol') || 'invitado';
 
@@ -64,12 +64,14 @@ export default function Sidebar({
             colapsado ? 'md:flex-col md:gap-2 md:px-2.5 md:py-3' : ''
           }`}
         >
-          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white p-1.5">
-            <img src={logoUn} alt="Uninúñez" className="h-full w-full object-contain" />
-          </span>
+          <Logo variant="mark" size="md" />
           <div className={`min-w-0 flex-1 ${colapsado ? 'md:hidden' : ''}`}>
-            <p className="truncate text-sm font-semibold leading-tight text-white">Optimizador</p>
-            <p className="truncate text-[11px] uppercase tracking-[0.16em] text-brand-300">Uninúñez</p>
+            <p className="truncate text-sm font-semibold leading-tight text-white">
+              Optimizador de Horarios
+            </p>
+            <p className="truncate text-[10px] uppercase tracking-[0.16em] text-brand-300">
+              Uninúñez
+            </p>
           </div>
           <button
             onClick={onCerrar}

@@ -78,7 +78,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <section className="flex flex-col rounded-lg border border-line bg-surface">
           <div className="border-b border-line px-5 py-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-700">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-800">
               Motor de optimización
             </p>
             <h2 className="mt-1 font-serif text-xl text-ink">Generar horarios globales</h2>
@@ -119,7 +119,7 @@ export default function Dashboard() {
 
         <section className="flex flex-col rounded-lg border border-line bg-surface">
           <div className="border-b border-line px-5 py-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-700">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-800">
               Consulta
             </p>
             <h2 className="mt-1 font-serif text-xl text-ink">Horario de un docente</h2>
@@ -186,7 +186,7 @@ export default function Dashboard() {
               Clase / asignatura
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded-sm border border-[#d9c9a0] bg-[#fbf6e9]" />
+              <span className="h-3 w-3 rounded-sm border border-info-border bg-info-bg" />
               Labor administrativa
             </span>
           </div>
