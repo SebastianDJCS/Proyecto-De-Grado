@@ -41,8 +41,11 @@ from app.models import (
 logger = logging.getLogger(__name__)
 
 # Jornada de enseñanza en ranuras de 1 hora: [HORA_INICIO, HORA_FIN)
-HORA_INICIO = 6   # 06:00
-HORA_FIN = 20     # 20:00 (la última ranura es 19:00-20:00)
+# Jornada de 06:00 a 20:00. Las clases empiezan en hora cerrada
+# y cada hora académica representa un bloque de 45 minutos.
+MINUTOS_POR_BLOQUE = 45
+HORA_INICIO = 6
+HORA_FIN = 20
 DIAS_ORDEN = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]
 
 # Pesos del objetivo
@@ -51,7 +54,7 @@ PESO_ADMIN_FALTANTE = 100
 PESO_DIA_ADMIN = 1
 
 HORAS_POR_SECCION_MIN = 1
-HORAS_POR_SECCION_MAX = 4
+HORAS_POR_SECCION_MAX = 3
 
 
 class ResultadoOptimizacion(BaseModel):
@@ -79,22 +82,25 @@ class DatosOptimizacion(NamedTuple):
 
 
 def _horas_enteras_de_bloque(bloque: str) -> List[int]:
-    """Convierte un bloque "HH:MM-HH:MM" en las ranuras horarias ENTERAS que cubre.
-
-    Solo incluye las horas completamente contenidas en el bloque. Ej.:
-    "08:00-12:00" -> [8, 9, 10, 11]; "06:00-08:00" -> [6, 7].
-    """
+    """Convierte un bloque "HH:MM-HH:MM" en horas de inicio disponibles."""
     try:
         inicio, fin = bloque.split("-")
-        h_ini = int(inicio.split(":")[0])
-        h_fin = int(fin.split(":")[0])
-        return [h for h in range(h_ini, h_fin) if HORA_INICIO <= h < HORA_FIN]
+        h_ini, m_ini = map(int, inicio.strip().split(":"))
+        h_fin, m_fin = map(int, fin.strip().split(":"))
+        minuto_ini = h_ini * 60 + m_ini
+        minuto_fin = h_fin * 60 + m_fin
+        return [
+            hora
+            for hora in range(HORA_INICIO, HORA_FIN)
+            if minuto_ini <= hora * 60
+            and hora * 60 + MINUTOS_POR_BLOQUE <= minuto_fin
+        ]
     except (ValueError, AttributeError):
         return []
 
 
 def _dur_grupo(grupo: GrupoProyectado) -> int:
-    """Duración en ranuras (horas) de cada sesión del grupo (1 a 4)."""
+    """Duración en ranuras de 45 minutos de cada sesión del grupo (1 a 3 horas académicas)."""
     asig = grupo.asignatura
     dur = getattr(asig, "horas_por_seccion", None) or 2
     return max(HORAS_POR_SECCION_MIN, min(HORAS_POR_SECCION_MAX, int(dur)))
@@ -114,9 +120,14 @@ def _secciones_grupo(grupo: GrupoProyectado) -> int:
 
 
 def _fmt_intervalo(inicio_h: int, dur: int) -> str:
-    """Representa un intervalo como "HH:MM-HH:MM" (ej. 8, 3 -> 08:00-11:00)."""
-    fin_h = inicio_h + dur
-    return f"{inicio_h:02d}:00-{fin_h:02d}:00"
+    """Representa una ranura académica como "HH:MM-HH:MM"."""
+    inicio_minutos = inicio_h * 60
+    fin_minutos = inicio_minutos + dur * MINUTOS_POR_BLOQUE
+
+    def formato(minutos: int) -> str:
+        return f"{minutos // 60:02d}:{minutos % 60:02d}"
+
+    return f"{formato(inicio_minutos)}-{formato(fin_minutos)}"
 
 
 def _extraer_datos_bd(db: Session) -> DatosOptimizacion:

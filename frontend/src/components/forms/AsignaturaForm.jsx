@@ -78,10 +78,8 @@ export default function AsignaturaForm({ asignaturaToEdit, catalogo = [], onSucc
 
       const seccionesGrupo = teoricoPractica ? 2 : 1;
       const horasSeccion = teoricoPractica ? horasTotales / 2 : horasTotales;
-      if (horasSeccion < 1 || horasSeccion > (teoricoPractica ? 3 : 4)) {
-        throw new Error(teoricoPractica
-          ? 'La duración por sección debe estar entre 1 y 3 horas'
-          : 'La duración de la sección debe estar entre 1 y 4 horas');
+      if (horasSeccion < 1 || horasSeccion > 3) {
+        throw new Error('La duración por sección debe estar entre 1 y 3 horas académicas');
       }
 
       const payload = {
@@ -121,7 +119,7 @@ export default function AsignaturaForm({ asignaturaToEdit, catalogo = [], onSucc
         texto: error.message === 'Horas semanales inválidas'
           || error.message === 'Las materias teórico-prácticas requieren un total de horas par'
           || error.message === 'La duración por sección debe estar entre 1 y 3 horas'
-          || error.message === 'La duración de la sección debe estar entre 1 y 4 horas'
+          || error.message === 'La duración por sección debe estar entre 1 y 3 horas académicas'
           ? error.message
           : 'Hubo un error al procesar la asignatura en el backend.',
         tipo: 'error',
@@ -211,13 +209,13 @@ export default function AsignaturaForm({ asignaturaToEdit, catalogo = [], onSucc
             />
           </div>
           <div>
-            <label htmlFor="asig-horas-semanales" className={labelClass}>Horas semanales</label>
+            <label htmlFor="asig-horas-semanales" className={labelClass}>Horas académicas semanales</label>
             <input
               id="asig-horas-semanales"
               type="number"
               name="horas_semanales"
               min="1"
-              max={formData.teorico_practica ? 6 : 4}
+              max={formData.teorico_practica ? 6 : 3}
               step={formData.teorico_practica ? 2 : 1}
               value={formData.horas_semanales}
               onChange={handleChange}
@@ -232,7 +230,7 @@ export default function AsignaturaForm({ asignaturaToEdit, catalogo = [], onSucc
             ? `Materia de 2 secciones: ${formData.horas_semanales
                 ? `${formData.horas_semanales} horas totales ÷ 2 = ${Number(formData.horas_semanales) / 2} horas por sección`
                 : 'indica las horas totales para dividirlas entre las 2 secciones'}`
-            : 'Materia de 1 sección: las horas indicadas corresponden a la sección completa.'}
+            : 'Materia de 1 sección: máximo 3 horas académicas. Cada hora académica equivale a 45 minutos.'}
         </p>
 
         <div>

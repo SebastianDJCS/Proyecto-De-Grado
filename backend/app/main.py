@@ -88,12 +88,12 @@ def _migraciones_ligeras() -> None:
                     )
                 )
                 # Inferir la duración real de cada sección a partir de las horas
-                # semanales y las secciones existentes (limitado al rango 1-4).
+                # semanales y las secciones existentes (limitado al rango 1-3).
                 if dialecto == "postgresql":
                     conn.execute(
                         text(
                             "UPDATE asignaturas "
-                            "SET horas_por_seccion = LEAST(4, GREATEST(1, "
+                            "SET horas_por_seccion = LEAST(3, GREATEST(1, "
                             "  CASE WHEN secciones_por_grupo > 0 "
                             "       THEN ROUND(horas_semanales::numeric / secciones_por_grupo) "
                             "       ELSE 2 END)) "
@@ -104,7 +104,7 @@ def _migraciones_ligeras() -> None:
                     conn.execute(
                         text(
                             "UPDATE asignaturas "
-                            "SET horas_por_seccion = MIN(4, MAX(1, "
+                            "SET horas_por_seccion = MIN(3, MAX(1, "
                             "  CASE WHEN secciones_por_grupo > 0 "
                             "       THEN CAST(ROUND(horas_semanales * 1.0 / secciones_por_grupo) AS INTEGER) "
                             "       ELSE 2 END)) "
