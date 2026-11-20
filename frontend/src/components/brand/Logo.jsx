@@ -52,7 +52,7 @@ function BloqueHorizontal({ size, inverse }) {
             inverse ? 'text-white' : 'text-ink'
           }`}
         >
-          INÚÑEZ
+          UNINÚÑEZ
         </p>
         <p className={`${s.sub} mt-1 font-semibold leading-tight ${colorNombre}`}>{NOMBRE}</p>
         <p className={`${s.sub} font-medium leading-tight ${colorSecundario} opacity-80`}>

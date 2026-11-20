@@ -12,7 +12,7 @@ class AsignaturaBase(BaseModel):
     horas_semanales: int = Field(ge=0)
     # Sesiones semanales por grupo
     secciones_por_grupo: int = Field(default=1, ge=1, le=10)
-    # Duración (horas) de cada sección: 1, 2 o 3
+    # Duración de cada sección en horas académicas (bloques de 45 minutos): 1 a 3
     horas_por_seccion: int = Field(default=2, ge=1, le=3)
     seleccionable: bool = False
     tipo: str = Field(default="FUNDAMENTAL", pattern="^(FUNDAMENTAL|ELECTIVA)$")
@@ -35,7 +35,7 @@ class AsignaturaUpdate(BaseModel):
     horas_semanales: Optional[int] = Field(default=None, ge=0)
     # Sesiones semanales por grupo
     secciones_por_grupo: Optional[int] = Field(default=None, ge=1, le=10)
-    # Duración (horas) de cada sección: 1, 2 o 3
+    # Duración de cada sección en horas académicas (bloques de 45 minutos): 1 a 3
     horas_por_seccion: Optional[int] = Field(default=None, ge=1, le=3)
     seleccionable: Optional[bool] = None
     tipo: Optional[str] = Field(default=None, pattern="^(FUNDAMENTAL|ELECTIVA)$")
