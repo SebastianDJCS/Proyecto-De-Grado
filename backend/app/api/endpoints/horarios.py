@@ -1,11 +1,13 @@
 import logging
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Any, Dict, List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import HorarioOptimizado, Docente
+from app.deps import get_current_usuario
+from app.models import HorarioOptimizado, Docente, Usuario
+from app.utils.malla_pdf import generar_pdf_malla, sanitizar_nombre_archivo
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +31,15 @@ class HorarioDetalleSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class MallaPdfRequest(BaseModel):
+    """Payload con la malla ya resuelta para dibujarla en PDF."""
+
+    horarios: List[Dict[str, Any]] = []
+    titulo: str = "Malla horaria semanal"
+    subtitulo: Optional[str] = None
+    nombre_archivo: Optional[str] = None
 
 
 # --- Función Helper de Mapeo ---
@@ -156,3 +167,26 @@ def obtener_horario_por_salon(
         .all()
     )
     return [_mapear_horario(h) for h in horarios]
+
+
+@router.post("/pdf")
+def descargar_malla_pdf(
+    request: MallaPdfRequest,
+    usuario: Usuario = Depends(get_current_usuario),
+):
+    """Genera la malla horaria en PDF vectorial y la devuelve para descargar.
+
+    Recibe la malla ya resuelta (la misma que se dibuja en pantalla) porque el
+    horario del estudiante se arma en memoria y no queda persistido.
+    """
+    pdf_bytes = generar_pdf_malla(request.horarios, request.titulo, request.subtitulo)
+    nombre = sanitizar_nombre_archivo(request.nombre_archivo or request.titulo)
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{nombre}.pdf"',
+            "Content-Length": str(len(pdf_bytes)),
+        },
+    )

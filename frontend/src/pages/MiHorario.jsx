@@ -9,9 +9,10 @@ import {
   Wallet,
   RefreshCw,
   Repeat,
+  CalendarDays,
 } from 'lucide-react';
 import SemestreAcordeon from '../components/SemestreAcordeon';
-import { MallaHoraria } from '../components/MallaHoraria';
+import MallaHorariaModal from '../components/MallaHorariaModal';
 import {
   getAsignaturasSeleccionables,
   getCatalogoAnterior,
@@ -54,6 +55,9 @@ export default function MiHorario() {
   const [generando, setGenerando] = useState(false);
   const [resultado, setResultado] = useState(null);
   const [error, setError] = useState(null);
+
+  // Ventana superpuesta con la malla horaria
+  const [mallaAbierta, setMallaAbierta] = useState(false);
 
   // Modal "Nuevo horario"
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -221,6 +225,7 @@ export default function MiHorario() {
     try {
       const data = await generarHorarioEstudiante(seleccionadas);
       setResultado(data);
+      if (data?.horario?.length) setMallaAbierta(true);
     } catch (err) {
       if (manejarSesion(err, navigate)) return;
       setError(err.response?.data?.detail || 'Ocurrió un error al generar tu horario.');
@@ -244,6 +249,7 @@ export default function MiHorario() {
     try {
       const data = await generarHorarioEstudiante(nuevas);
       setResultado(data);
+      if (data?.horario?.length) setMallaAbierta(true);
     } catch (err) {
       if (manejarSesion(err, navigate)) return;
       setError(err.response?.data?.detail || 'Ocurrió un error al generar tu horario.');
@@ -497,15 +503,41 @@ export default function MiHorario() {
           )}
 
           <div className="rounded-lg border border-line bg-surface">
-            <div className="border-b border-line px-5 py-4">
-              <h2 className="font-serif text-xl text-ink">Malla horaria sugerida</h2>
-            </div>
-            <div className="p-4">
-              <MallaHoraria horarios={resultado.horario} />
+            <div className="flex flex-col gap-3 border-b border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="font-serif text-xl text-ink">Malla horaria sugerida</h2>
+                <p className="mt-1 text-sm text-muted">
+                  {resultado.horario?.length
+                    ? `${resultado.horario.length} bloque(s) asignados sin cruces.`
+                    : 'No hay bloques para mostrar.'}
+                </p>
+              </div>
+
+              <Button
+                variant="secondary"
+                onClick={() => setMallaAbierta(true)}
+                disabled={!resultado.horario?.length}
+              >
+                <CalendarDays className="h-4 w-4" />
+                Ver malla horaria
+              </Button>
             </div>
           </div>
         </section>
       )}
+
+      <MallaHorariaModal
+        open={mallaAbierta}
+        onClose={() => setMallaAbierta(false)}
+        horarios={resultado?.horario || []}
+        titulo="Malla horaria sugerida"
+        subtitulo={
+          perfil?.email
+            ? `${perfil.email} · Semestre ${perfil.semestre ?? 'sin definir'}`
+            : 'Generada sin cruces de horario.'
+        }
+        etiquetaArchivo={`malla-horaria-${perfil?.email || 'estudiante'}`}
+      />
 
       <Modal open={modalAbierto} onClose={cerrarModal} maxWidth="max-w-xl">
         <div className="p-6 sm:p-8">

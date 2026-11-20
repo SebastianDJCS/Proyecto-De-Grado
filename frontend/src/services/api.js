@@ -86,6 +86,59 @@ export const getAsignaturasSeleccionables = async (semestre = null) =>
 export const generarHorarioEstudiante = async (asignaturaIds) =>
   (await API.post('/estudiante/horario', { asignatura_ids: asignaturaIds })).data;
 
+// --- MALLA HORARIA EN PDF ---
+// El PDF se genera en el backend (reportlab) y se devuelve como archivo.
+export const descargarMallaPdf = async (payload) => {
+  const response = await API.post('/horarios/pdf', payload, { responseType: 'blob' });
+  return response.data;
+};
+
+// Guarda un Blob como archivo en el equipo del usuario.
+export const guardarArchivo = (blob, nombreArchivo) => {
+  const url = URL.createObjectURL(blob);
+  const enlace = document.createElement('a');
+  enlace.href = url;
+  enlace.download = nombreArchivo;
+  document.body.appendChild(enlace);
+  enlace.click();
+  enlace.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+};
+
+// Lee el detalle de error cuando la respuesta llega como Blob JSON.
+const leerError = async (blob) => {
+  try {
+    const datos = JSON.parse(await blob.text());
+    return datos?.detail || 'No se pudo generar el PDF.';
+  } catch {
+    return 'No se pudo generar el PDF.';
+  }
+};
+
+// Pide la malla en PDF y la descarga. Lanza Error con el mensaje del backend.
+export const descargarMallaPdfArchivo = async (payload, nombreArchivo) => {
+  let blob;
+
+  try {
+    blob = await descargarMallaPdf(payload);
+  } catch (err) {
+    const errorBlob = err.response?.data;
+    if (errorBlob?.type?.includes('application/json')) {
+      throw new Error(await leerError(errorBlob));
+    }
+    if (err.response?.status === 401) {
+      throw new Error('Tu sesión expiró. Vuelve a iniciar sesión.');
+    }
+    throw new Error('No se pudo generar el PDF. Intenta de nuevo.');
+  }
+
+  if (blob?.type?.includes('application/json')) {
+    throw new Error(await leerError(blob));
+  }
+
+  guardarArchivo(blob, nombreArchivo);
+};
+
 // --- AUTENTICACIÓN ---
 export const login = async (username, password) =>
   (await API.post('/auth/login', { username, password })).data;

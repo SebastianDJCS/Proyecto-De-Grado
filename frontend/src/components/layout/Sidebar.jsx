@@ -54,10 +54,43 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 flex h-screen w-64 transform flex-col justify-between border-r border-black/20 bg-ink transition-all duration-300 ease-in-out md:static md:h-auto md:min-h-screen md:translate-x-0 ${
+      className={`fixed inset-y-0 left-0 z-40 flex h-screen w-64 transform flex-col border-r border-black/20 bg-ink transition-all duration-300 ease-in-out md:static md:h-auto md:min-h-screen md:translate-x-0 ${
         abierto ? 'translate-x-0' : '-translate-x-full'
       } ${colapsado ? 'md:w-20' : 'md:w-64'}`}
     >
+      {/* Perfil y cierre de sesión arriba del todo */}
+      {rol !== 'invitado' && (
+        <div className="border-b border-white/10 p-3">
+          <div
+            className={`mb-2 flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 ${
+              colapsado ? 'md:flex-col md:gap-2 md:px-2.5 md:py-3' : ''
+            }`}
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-white/15 bg-white/10 text-xs font-semibold uppercase text-white">
+              {usuario.slice(0, 2)}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-semibold text-white">{usuario}</p>
+              <p className="truncate text-[10px] uppercase tracking-[0.14em] text-white/40">
+                {rol === 'estudiante' ? 'Estudiante' : 'Administrador'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={salir}
+            title="Cerrar sesión"
+            aria-label="Cerrar sesión"
+            className={`flex w-full items-center gap-3 rounded-md border border-white/10 px-3 py-2 text-sm font-medium text-white/55 transition-colors hover:bg-white/[0.05] hover:text-white ${
+              colapsado ? 'md:justify-center md:gap-0 md:px-0' : ''
+            }`}
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            <span className={`truncate ${colapsado ? 'md:hidden' : ''}`}>Cerrar sesión</span>
+          </button>
+        </div>
+      )}
+
       <div className="flex min-h-0 flex-1 flex-col">
         <div
           className={`flex items-center gap-3 border-b border-white/10 px-5 py-5 ${
@@ -133,38 +166,6 @@ export default function Sidebar({
       </div>
 
       <div className="border-t border-white/10 p-3">
-        {rol !== 'invitado' && (
-          <div
-            className={`mb-2 flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 ${
-              colapsado ? 'md:hidden' : ''
-            }`}
-          >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-white/15 bg-white/10 text-xs font-semibold uppercase text-white">
-              {usuario.slice(0, 2)}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-white">{usuario}</p>
-              <p className="text-[10px] uppercase tracking-[0.14em] text-white/40">
-                {rol === 'estudiante' ? 'Estudiante' : 'Administrador'}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {rol !== 'invitado' && (
-          <button
-            onClick={salir}
-            title="Cerrar sesión"
-            aria-label="Cerrar sesión"
-            className={`mb-3 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white/55 transition-colors hover:bg-white/[0.05] hover:text-white ${
-              colapsado ? 'md:justify-center md:gap-0 md:px-0' : ''
-            }`}
-          >
-            <LogOut className="h-4 w-4 shrink-0" />
-            <span className={`truncate ${colapsado ? 'md:hidden' : ''}`}>Cerrar sesión</span>
-          </button>
-        )}
-
         <p className={`px-2 text-[10px] text-white/30 ${colapsado ? 'md:hidden' : ''}`}>
           Proyecto de Grado · 2026
         </p>
