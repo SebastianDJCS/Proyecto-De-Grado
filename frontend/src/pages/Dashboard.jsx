@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { MallaHoraria } from '../components/MallaHoraria';
+import MallaHorariaModal from '../components/MallaHorariaModal';
 import { resolverHorarios, getHorarioDocente } from '../services/api';
-import { Play, Search, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Play, Search, AlertCircle, CheckCircle2, CalendarDays } from 'lucide-react';
 import { PageHeader, Button, Badge, Alert, fieldClass, labelClass } from '../components/ui';
 
 export default function Dashboard() {
@@ -14,6 +14,9 @@ export default function Dashboard() {
   const [horarios, setHorarios] = useState([]);
   const [loadingConsulta, setLoadingConsulta] = useState(false);
   const [errorConsulta, setErrorConsulta] = useState(null);
+
+  // Ventana superpuesta con la malla horaria
+  const [mallaAbierta, setMallaAbierta] = useState(false);
 
   // Handler para ejecutar el Solver Global
   const handleEjecutarSolver = async (e) => {
@@ -53,6 +56,9 @@ export default function Dashboard() {
       setHorarios(data);
       if (data.length === 0) {
         setErrorConsulta('No se encontraron horarios ni horas administrativas asignadas para este docente.');
+      } else {
+        setErrorConsulta(null);
+        setMallaAbierta(true);
       }
     } catch (err) {
       setHorarios([]);
@@ -172,7 +178,8 @@ export default function Dashboard() {
                   Mostrando horarios de{' '}
                   <span className="font-semibold text-ink">
                     {horarios[0]?.docente_nombre || 'Docente'}
-                  </span>
+                  </span>{' '}
+                  · {horarios.length} bloque(s)
                 </>
               ) : (
                 'Selecciona un docente para visualizar su programación.'
@@ -180,7 +187,7 @@ export default function Dashboard() {
             </p>
           </div>
 
-          <div className="flex items-center gap-4 text-xs text-muted">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-muted">
             <span className="inline-flex items-center gap-1.5">
               <span className="h-3 w-3 rounded-sm border border-brand-300 bg-brand-100" />
               Clase / asignatura
@@ -189,13 +196,30 @@ export default function Dashboard() {
               <span className="h-3 w-3 rounded-sm border border-info-border bg-info-bg" />
               Labor administrativa
             </span>
+            <Button
+              variant="secondary"
+              onClick={() => setMallaAbierta(true)}
+              disabled={horarios.length === 0}
+            >
+              <CalendarDays className="h-4 w-4" />
+              Ver malla horaria
+            </Button>
           </div>
         </div>
-
-        <div className="p-4">
-          <MallaHoraria horarios={horarios} />
-        </div>
       </section>
+
+      <MallaHorariaModal
+        open={mallaAbierta}
+        onClose={() => setMallaAbierta(false)}
+        horarios={horarios}
+        titulo="Malla horaria semanal"
+        subtitulo={
+          horarios.length > 0
+            ? `Docente: ${horarios[0]?.docente_nombre || 'Docente'}`
+            : ''
+        }
+        etiquetaArchivo={`malla-horaria-${horarios[0]?.docente_nombre || 'docente'}`}
+      />
     </div>
   );
 }

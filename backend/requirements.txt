@@ -1,6 +1,6 @@
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
-sqlalchemy==2.0.23
+sqlalchemy==2.0.58
 alembic==1.13.0
 pydantic==2.5.0
 pydantic-settings==2.1.0
@@ -11,3 +11,4 @@ pandas==3.0.5
 openpyxl==3.1.5
 ortools
 python-dateutil==2.8.2
+reportlab==5.1.0

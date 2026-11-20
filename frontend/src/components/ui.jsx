@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { X } from 'lucide-react';
 
 export const fieldClass =
@@ -112,6 +113,24 @@ export function EmptyState({ icon: Icon, title, description }) {
 }
 
 export function Modal({ open, onClose, children, maxWidth = 'max-w-2xl' }) {
+  // Cerrar con ESC y bloquear el scroll del fondo mientras el modal está abierto.
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const alPresionar = (evento) => {
+      if (evento.key === 'Escape') onClose?.();
+    };
+
+    document.addEventListener('keydown', alPresionar);
+    const overflowOriginal = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', alPresionar);
+      document.body.style.overflow = overflowOriginal;
+    };
+  }, [open, onClose]);
+
   if (!open) return null;
 
   return (
@@ -122,7 +141,7 @@ export function Modal({ open, onClose, children, maxWidth = 'max-w-2xl' }) {
       <div
         role="dialog"
         aria-modal="true"
-        className={`relative my-auto w-full ${maxWidth} rounded-lg border border-line bg-surface shadow-2xl`}
+        className={`relative my-auto flex max-h-[92vh] w-full flex-col ${maxWidth} rounded-lg border border-line bg-surface shadow-2xl`}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <button

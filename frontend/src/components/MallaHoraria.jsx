@@ -66,11 +66,11 @@ const calcularEtiquetasSesion = (horarios = []) => {
   return etiquetas;
 };
 
-export const MallaHoraria = ({ horarios = [] }) => {
+export const MallaHoraria = ({ horarios = [], className = '' }) => {
   const etiquetasSesion = calcularEtiquetasSesion(horarios);
 
   return (
-    <div className="overflow-x-auto rounded-md border border-line bg-surface">
+    <div className={`overflow-x-auto rounded-md border border-line bg-surface ${className}`}>
       <table className="w-full border-collapse text-center text-sm text-ink">
         <thead className="sticky top-0 z-20 bg-ink text-white">
           <tr>
