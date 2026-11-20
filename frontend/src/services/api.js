@@ -26,6 +26,12 @@ export const getHorarioDocente = async (documento) => {
   return response.data;
 };
 
+// Obtener el horario completo generado, incluidas las labores administrativas
+export const getHorarioGlobal = async () => {
+  const response = await API.get('/horarios/', { params: { limit: 10000 } });
+  return response.data;
+};
+
 // 3. Obtener horarios de un grupo por su ID
 export const getHorarioGrupo = async (grupoId) => {
   const response = await API.get(`/horarios/grupo/${grupoId}`);

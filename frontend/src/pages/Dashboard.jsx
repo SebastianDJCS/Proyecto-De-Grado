@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import MallaHorariaModal from '../components/MallaHorariaModal';
-import { resolverHorarios, getHorarioDocente } from '../services/api';
-import { Play, Search, AlertCircle, CheckCircle2, CalendarDays } from 'lucide-react';
+import { resolverHorarios, getHorarioDocente, getHorarioGlobal } from '../services/api';
+import { Play, Search, AlertCircle, CheckCircle2, CalendarDays, Globe } from 'lucide-react';
 import { PageHeader, Button, Badge, Alert, fieldClass, labelClass } from '../components/ui';
 
 export default function Dashboard() {
@@ -17,6 +17,31 @@ export default function Dashboard() {
 
   // Ventana superpuesta con la malla horaria
   const [mallaAbierta, setMallaAbierta] = useState(false);
+  const [mallaGlobalAbierta, setMallaGlobalAbierta] = useState(false);
+  const [horarioGlobal, setHorarioGlobal] = useState([]);
+  const [loadingGlobal, setLoadingGlobal] = useState(false);
+  const [errorGlobal, setErrorGlobal] = useState(null);
+
+  const handleVerHorarioGlobal = async () => {
+    setLoadingGlobal(true);
+    setErrorGlobal(null);
+
+    try {
+      const data = await getHorarioGlobal();
+      setHorarioGlobal(data);
+      setMallaGlobalAbierta(true);
+      if (data.length === 0) {
+        setErrorGlobal('Aún no hay horarios generados.');
+      }
+    } catch (err) {
+      setHorarioGlobal([]);
+      setErrorGlobal(
+        err.response?.data?.detail || 'No se pudo consultar el horario global.'
+      );
+    } finally {
+      setLoadingGlobal(false);
+    }
+  };
 
   // Handler para ejecutar el Solver Global
   const handleEjecutarSolver = async (e) => {
@@ -78,8 +103,32 @@ export default function Dashboard() {
         kicker="Panel general"
         title="Optimización de horarios académicos"
         description="Ejecuta el motor global y consulta las mallas horarias de docentes y horas administrativas."
-        actions={<Badge tone="ink">CP-SAT · Global</Badge>}
+        actions={
+          <>
+            <Badge tone="ink">CP-SAT · Global</Badge>
+            <Button
+              variant="secondary"
+              onClick={handleVerHorarioGlobal}
+              disabled={loadingGlobal}
+            >
+              {loadingGlobal ? (
+                'Consultando…'
+              ) : (
+                <>
+                  <Globe className="h-4 w-4" />
+                  Ver horario global
+                </>
+              )}
+            </Button>
+          </>
+        }
       />
+
+      {errorGlobal && (
+        <div className="mb-5">
+          <Alert tone="danger">{errorGlobal}</Alert>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <section className="flex flex-col rounded-lg border border-line bg-surface">
@@ -219,6 +268,14 @@ export default function Dashboard() {
             : ''
         }
         etiquetaArchivo={`malla-horaria-${horarios[0]?.docente_nombre || 'docente'}`}
+      />
+      <MallaHorariaModal
+        open={mallaGlobalAbierta}
+        onClose={() => setMallaGlobalAbierta(false)}
+        horarios={horarioGlobal}
+        titulo="Horario global"
+        subtitulo="Todas las materias, docentes y horas administrativas"
+        etiquetaArchivo="horario-global"
       />
     </div>
   );

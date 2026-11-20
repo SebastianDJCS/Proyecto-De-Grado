@@ -84,7 +84,7 @@ def _mapear_horario(h: HorarioOptimizado) -> HorarioDetalleSchema:
 def obtener_todos_los_horarios(
     db: Session = Depends(get_db),
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 10000,
     docente_id: Optional[int] = None,
     grupo_id: Optional[int] = None,
     salon_id: Optional[int] = None,
