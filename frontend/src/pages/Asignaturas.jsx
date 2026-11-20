@@ -101,7 +101,7 @@ export default function Asignaturas() {
         <strong className="font-semibold text-ink">{asig.secciones ?? 0}</strong> grupo(s)
       </p>
       <p className="tabular">
-        {asig.secciones_por_grupo ?? 1}×{asig.horas_por_seccion ?? 2}h por grupo
+        {(asig.secciones_por_grupo ?? 1) === 2 ? 'Teórico-práctica · 2 secciones' : '1 sección'}
       </p>
     </div>
   );
