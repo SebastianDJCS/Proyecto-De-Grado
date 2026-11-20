@@ -9,6 +9,7 @@ export default function AsignaturaForm({ asignaturaToEdit, catalogo = [], onSucc
       ? {
           ...asignaturaToEdit,
           num_secciones: asignaturaToEdit.secciones ?? 0,
+          teorico_practica: (asignaturaToEdit.secciones_por_grupo ?? 1) === 2,
           prerequisito_ids: asignaturaToEdit.prerequisito_ids || [],
         }
       : {
@@ -20,8 +21,7 @@ export default function AsignaturaForm({ asignaturaToEdit, catalogo = [], onSucc
           seleccionable: false,
           tipo: 'FUNDAMENTAL',
           num_secciones: 1,
-          secciones_por_grupo: 1,
-          horas_por_seccion: 2,
+          teorico_practica: false,
           estudiantes_por_seccion: '',
           prerequisito_ids: [],
         }
@@ -66,13 +66,27 @@ export default function AsignaturaForm({ asignaturaToEdit, catalogo = [], onSucc
     setMensaje({ texto: '', tipo: '' });
 
     try {
-      const seccionesGrupo = parseInt(formData.secciones_por_grupo, 10) || 1;
-      const horasSeccion = Math.min(3, Math.max(1, parseInt(formData.horas_por_seccion, 10) || 2));
+      const teoricoPractica = !!formData.teorico_practica;
+      const horasTotales = parseInt(formData.horas_semanales, 10);
+
+      if (!Number.isFinite(horasTotales) || horasTotales < 1) {
+        throw new Error('Horas semanales inválidas');
+      }
+      if (teoricoPractica && horasTotales % 2 !== 0) {
+        throw new Error('Las materias teórico-prácticas requieren un total de horas par');
+      }
+
+      const seccionesGrupo = teoricoPractica ? 2 : 1;
+      const horasSeccion = teoricoPractica ? horasTotales / 2 : horasTotales;
+      if (horasSeccion < 1 || horasSeccion > 3) {
+        throw new Error('La duración por sección debe estar entre 1 y 3 horas');
+      }
+
       const payload = {
         ...formData,
         semestre: parseInt(formData.semestre, 10) || 1,
         creditos: parseInt(formData.creditos, 10) || 0,
-        horas_semanales: seccionesGrupo * horasSeccion,
+        horas_semanales: horasTotales,
         secciones_por_grupo: seccionesGrupo,
         horas_por_seccion: horasSeccion,
         seleccionable: !!formData.seleccionable,
@@ -84,10 +98,12 @@ export default function AsignaturaForm({ asignaturaToEdit, catalogo = [], onSucc
         delete payload.estudiantes_por_seccion;
         delete payload.secciones;
         delete payload.id;
+        delete payload.teorico_practica;
         await updateAsignatura(asignaturaToEdit.id, payload);
         setMensaje({ texto: '¡Asignatura actualizada con éxito!', tipo: 'success' });
       } else {
         payload.estudiantes_por_seccion = parseInt(formData.estudiantes_por_seccion, 10) || 0;
+        delete payload.teorico_practica;
         await createAsignatura(payload);
         setMensaje({ texto: '¡Asignatura registrada con sus grupos!', tipo: 'success' });
       }
@@ -99,7 +115,14 @@ export default function AsignaturaForm({ asignaturaToEdit, catalogo = [], onSucc
       }
     } catch (error) {
       console.error(error);
-      setMensaje({ texto: 'Hubo un error al procesar la asignatura en el backend.', tipo: 'error' });
+      setMensaje({
+        texto: error.message === 'Horas semanales inválidas'
+          || error.message === 'Las materias teórico-prácticas requieren un total de horas par'
+          || error.message === 'La duración por sección debe estar entre 1 y 3 horas'
+          ? error.message
+          : 'Hubo un error al procesar la asignatura en el backend.',
+        tipo: 'error',
+      });
     } finally {
       setLoading(false);
     }
@@ -157,7 +180,7 @@ export default function AsignaturaForm({ asignaturaToEdit, catalogo = [], onSucc
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <div>
             <label htmlFor="asig-semestre" className={labelClass}>Semestre</label>
             <input
@@ -185,38 +208,28 @@ export default function AsignaturaForm({ asignaturaToEdit, catalogo = [], onSucc
             />
           </div>
           <div>
-            <label htmlFor="asig-secciones-grupo" className={labelClass}>Secciones/sem.</label>
+            <label htmlFor="asig-horas-semanales" className={labelClass}>Horas semanales</label>
             <input
-              id="asig-secciones-grupo"
+              id="asig-horas-semanales"
               type="number"
-              name="secciones_por_grupo"
+              name="horas_semanales"
               min="1"
-              max="10"
-              value={formData.secciones_por_grupo ?? 1}
+              max={formData.teorico_practica ? 6 : 3}
+              step={formData.teorico_practica ? 2 : 1}
+              value={formData.horas_semanales}
               onChange={handleChange}
               required
-              placeholder="2"
-              className={fieldClass}
-            />
-          </div>
-          <div>
-            <label htmlFor="asig-horas-seccion" className={labelClass}>Horas/sección</label>
-            <input
-              id="asig-horas-seccion"
-              type="number"
-              name="horas_por_seccion"
-              min="1"
-              max="3"
-              value={formData.horas_por_seccion ?? 2}
-              onChange={handleChange}
-              required
-              placeholder="2"
+              placeholder={formData.teorico_practica ? '4' : '2'}
               className={fieldClass}
             />
           </div>
         </div>
         <p className="-mt-1 text-[11px] text-faint">
-          Sesiones semanales del grupo y duración de cada sesión (1 a 3 horas).
+          {formData.teorico_practica
+            ? `Materia de 2 secciones: ${formData.horas_semanales
+                ? `${formData.horas_semanales} horas totales ÷ 2 = ${Number(formData.horas_semanales) / 2} horas por sección`
+                : 'indica las horas totales para dividirlas entre las 2 secciones'}`
+            : 'Materia de 1 sección: las horas indicadas corresponden a la sección completa.'}
         </p>
 
         <div>
@@ -235,6 +248,22 @@ export default function AsignaturaForm({ asignaturaToEdit, catalogo = [], onSucc
             En conflictos de horario del estudiante, se descarta la electiva antes que la fundamental.
           </p>
         </div>
+
+        <label className="flex cursor-pointer items-start gap-3 rounded-md border border-line bg-canvas/60 p-3">
+          <input
+            type="checkbox"
+            name="teorico_practica"
+            checked={!!formData.teorico_practica}
+            onChange={handleChange}
+            className="mt-0.5 h-4 w-4 rounded-sm border-line-strong accent-brand-600"
+          />
+          <span className="text-sm text-ink">
+            <strong className="font-semibold">Materia teórico-práctica</strong>
+            <span className="mt-0.5 block text-[11px] text-faint">
+              Al habilitarlo, la materia tendrá 2 secciones semanales.
+            </span>
+          </span>
+        </label>
 
         <div>
           <label className={labelClass}>Materias prerrequisito</label>
