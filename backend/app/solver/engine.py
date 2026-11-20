@@ -51,7 +51,7 @@ PESO_ADMIN_FALTANTE = 100
 PESO_DIA_ADMIN = 1
 
 HORAS_POR_SECCION_MIN = 1
-HORAS_POR_SECCION_MAX = 3
+HORAS_POR_SECCION_MAX = 4
 
 
 class ResultadoOptimizacion(BaseModel):
@@ -94,7 +94,7 @@ def _horas_enteras_de_bloque(bloque: str) -> List[int]:
 
 
 def _dur_grupo(grupo: GrupoProyectado) -> int:
-    """Duración en ranuras (horas) de cada sesión del grupo (1, 2 o 3)."""
+    """Duración en ranuras (horas) de cada sesión del grupo (1 a 4)."""
     asig = grupo.asignatura
     dur = getattr(asig, "horas_por_seccion", None) or 2
     return max(HORAS_POR_SECCION_MIN, min(HORAS_POR_SECCION_MAX, int(dur)))
