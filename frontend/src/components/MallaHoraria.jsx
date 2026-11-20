@@ -172,8 +172,8 @@ export const MallaHoraria = ({ horarios = [], className = '' }) => {
 
                             <p className="truncate font-semibold leading-tight">
                               {esAdmin
-                                ? item.actividad || item.asignatura || 'Labor administrativa'
-                                : item.asignatura || item.materia}
+                                ? `Labor administrativa · ${item.docente_nombre || item.docente || 'Docente'}`
+                                : `${item.asignatura || item.materia || 'Asignatura'} · ${item.docente_nombre || item.docente || 'Docente'}`}
                             </p>
                           </div>
 
