@@ -13,6 +13,39 @@ Respetando todas las **restricciones duras** del problema académico.
 
 ---
 
+## Modelo de Tiempo
+
+El tiempo se discretiza en **ticks de 15 minutos** (`TICK_MINUTOS = 15`). Cada
+hora académica son 45 minutos, es decir `TICKS_POR_BLOQUE = 3` ticks. El rango
+modelado es 06:00 – 23:00 (`MIN_TICK` = 24, `MAX_TICK` = 92), el mismo que usan
+el frontend y el PDF.
+
+### Rejillas de inicio
+
+| Jornada | Rejilla | Inicios |
+|---------|---------|---------|
+| Diurna | 07:15 + 45k | 07:15, 08:00, 08:45, 09:30 … 17:45 |
+| Nocturna | 18:00 + 45k | 18:00, 18:45, 19:30, 20:15, 21:00 |
+
+### Ventanas por semestre
+
+| Semestres | Ventana | Reglas |
+|------------|---------|--------|
+| 1 a 5 | Diurna | El inicio nunca es anterior a **07:15** ni posterior a 18:00. La sesión puede terminar más tarde (sin límite de fin). |
+| 6 en adelante | Nocturna | La sesión completa cabe entre **18:00 y 21:45**. |
+
+Las **horas administrativas** no tienen ventana por semestre: se programan
+según la disponibilidad del docente, en bloques de 45 minutos desde las 06:00.
+
+### Restricciones horarias
+```
+Restricción: inicio de clase ∈ rejilla de la ventana del semestre
+Restricción: (inicio + duración) ≤ 21:45 para semestres 6+
+Restricción: inicio ≥ 07:15 para todas las clases
+```
+
+---
+
 ## Restricciones Duras Implementadas
 
 ### 1. **Capacidad de Salones**
@@ -170,8 +203,10 @@ class DatosOptimizacion(NamedTuple):
     grupos: List[GrupoProyectado]
     docentes: List[Docente]
     salones: List[Salon]
-    disponibilidades: Dict[int, set]  # docente_id -> {(dia, bloque)}
-    bloques_horarios: List[Tuple[str, str]]
+    disp_slots: Dict[int, set]   # docente_id -> {(dia, tick) disponible para clases}
+    disp_admin: Dict[int, set]   # docente_id -> {(dia, tick_inicio) para horas admin}
+    dias: List[str]
+    docente_asignaturas: Dict[int, set]
 ```
 
 ---
@@ -267,6 +302,17 @@ logging.basicConfig(level=logging.INFO)
 2. **Sin bloques horarios**: Disponibilidades vacías
 3. **Problema infeasible**: No hay solución válida
 4. **Excepciones de BD**: Capturadas y reportadas
+
+### Diagnóstico de grupos sin horario
+Cuando un grupo no tiene **ningún inicio posible** (disponibilidad fuera de la
+ventana de su semestre o sin salón con capacidad suficiente), el motor lo
+reporta como advertencia en `mensaje`, junto con el número de **sesiones sin
+programar**:
+
+```
+Optimización OPTIMAL: 120 bloques guardados (Clases + Admin) | Sesiones sin programar: 4
+| Advertencias: Grupos sin horario posible (...): Cálculo Vectorial (1 grupo(s))
+```
 
 ### Retorno en Error
 ```python

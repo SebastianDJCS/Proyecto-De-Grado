@@ -112,7 +112,13 @@ export function EmptyState({ icon: Icon, title, description }) {
   );
 }
 
-export function Modal({ open, onClose, children, maxWidth = 'max-w-2xl' }) {
+export function Modal({
+  open,
+  onClose,
+  children,
+  maxWidth = 'max-w-2xl',
+  maxHeight = 'max-h-[92vh]',
+}) {
   // Cerrar con ESC y bloquear el scroll del fondo mientras el modal está abierto.
   useEffect(() => {
     if (!open) return undefined;
@@ -141,7 +147,7 @@ export function Modal({ open, onClose, children, maxWidth = 'max-w-2xl' }) {
       <div
         role="dialog"
         aria-modal="true"
-        className={`relative my-auto flex max-h-[92vh] w-full flex-col ${maxWidth} rounded-lg border border-line bg-surface shadow-2xl`}
+        className={`relative my-auto flex ${maxHeight} w-full flex-col ${maxWidth} rounded-lg border border-line bg-surface shadow-2xl`}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <button

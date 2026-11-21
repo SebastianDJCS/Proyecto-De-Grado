@@ -111,7 +111,7 @@ function Contenido() {
           <Route
             path="/"
             element={
-              <RutaProtegida>
+              <RutaProtegida rolRequerido="admin">
                 <Dashboard />
               </RutaProtegida>
             }

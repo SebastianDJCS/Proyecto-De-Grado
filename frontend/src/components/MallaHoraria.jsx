@@ -1,4 +1,5 @@
 import { MapPin, User } from 'lucide-react';
+import { esAdminItem } from './mallaUtils';
 
 const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
@@ -41,12 +42,6 @@ const calcularEstilosTarjeta = (bloqueHorarioStr) => {
     height: `${Math.max(30, height)}px`, // Altura mínima de seguridad de 30px
   };
 };
-
-const esAdminItem = (item) =>
-  item.tipo_actividad?.toUpperCase().includes('ADMIN') ||
-  item.tipo?.toUpperCase().includes('ADMIN') ||
-  item.es_administrativa === true ||
-  item.es_administrativa === 1;
 
 // Etiqueta de sesión por grupo: "1/2", "2/2"... para que se vea que varias
 // tarjetas de la misma materia+grupo son UN solo grupo con varias sesiones.

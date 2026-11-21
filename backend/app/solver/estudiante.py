@@ -26,6 +26,10 @@ TIEMPO_MAXIMO_SELECTOR = 30
 
 TIPO_ELECTIVA = "ELECTIVA"
 
+# Resolución temporal (debe coincidir con app.solver.engine).
+TICK_MINUTOS = 15
+MINUTOS_POR_BLOQUE = 45
+
 
 def _nombre_salon(salon: Salon | None) -> str | None:
     if salon is None:
@@ -37,27 +41,37 @@ def _tipo_asignatura(asig: Asignatura) -> str:
     return (getattr(asig, "tipo", None) or "FUNDAMENTAL").upper()
 
 
-def _slots_de_bloque(bloque: str) -> List[int]:
-    """Extrae las ranuras horarias ENTERAS cubiertas por un bloque "HH:MM-HH:MM".
+def _ticks_de_bloque(bloque: str) -> List[int]:
+    """Extrae los ticks de 15 minutos cubiertos por un bloque "HH:MM-HH:MM".
 
     Permite detectar conflictos por SOLAPE de intervalos (sesiones de 1, 2 o 3
-    horas) en lugar de por igualdad exacta del string del bloque.
+    horas académicas) en lugar de por igualdad exacta del string del bloque.
+    Como las clases pueden iniciar a las 07:15 o a las 18:45, no basta con
+    truncar a horas enteras: se usa la resolución exacta de 15 minutos.
     """
+    if not bloque or "-" not in bloque:
+        return []
+    inicio, _, fin = bloque.partition("-")
     try:
-        inicio, fin = bloque.split("-")
-        h_ini = int(inicio.split(":")[0])
-        h_fin = int(fin.split(":")[0])
-        return list(range(h_ini, h_fin))
+        h_ini, m_ini = (inicio.strip().split(":") + ["0"])[:2]
+        h_fin, m_fin = (fin.strip().split(":") + ["0"])[:2]
+        min_ini = int(h_ini) * 60 + int(m_ini or 0)
+        min_fin = int(h_fin) * 60 + int(m_fin or 0)
     except (ValueError, AttributeError):
         return []
+    if min_fin <= min_ini:
+        min_fin = min_ini + MINUTOS_POR_BLOQUE
+    tick_ini = -(-min_ini // TICK_MINUTOS)   # ceil
+    tick_fin = min_fin // TICK_MINUTOS       # floor
+    return list(range(tick_ini, max(tick_fin, tick_ini)))
 
 
 def _bloques_de(op: dict) -> Set[Tuple[str, int]]:
-    """Ranuras (dia, hora) ocupadas por todas las sesiones de una opción."""
+    """Instantes (dia, tick) ocupados por todas las sesiones de una opción."""
     slots: Set[Tuple[str, int]] = set()
     for f in op["filas"]:
-        for h in _slots_de_bloque(f.bloque_horario):
-            slots.add((f.dia, h))
+        for t in _ticks_de_bloque(f.bloque_horario):
+            slots.add((f.dia, t))
     return slots
 
 

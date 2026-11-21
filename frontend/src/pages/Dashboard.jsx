@@ -276,6 +276,8 @@ export default function Dashboard() {
         titulo="Horario global"
         subtitulo="Todas las materias, docentes y horas administrativas"
         etiquetaArchivo="horario-global"
+        mostrarFiltroSemestre
+        permitirExportarJson
       />
     </div>
   );

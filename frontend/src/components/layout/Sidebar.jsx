@@ -97,15 +97,16 @@ export default function Sidebar({
             }`}
           >
             <div
+              title={`${usuario} · ${rol === 'estudiante' ? 'Estudiante' : 'Administrador'}`}
               className={`flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 ${
-                colapsado ? 'md:flex-col md:gap-1 md:px-2 md:py-2.5' : ''
+                colapsado ? 'md:justify-center md:gap-0 md:px-0 md:py-2' : ''
               }`}
             >
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-white/15 bg-white/10 text-xs font-semibold uppercase text-white">
                 {usuario.slice(0, 2)}
               </span>
-              <div className={`min-w-0 flex-1 ${colapsado ? 'md:w-full md:text-center' : ''}`}>
-                <p className="truncate text-xs font-semibold text-white" title={usuario}>
+              <div className={`min-w-0 flex-1 ${colapsado ? 'md:hidden' : ''}`}>
+                <p className="truncate text-xs font-semibold text-white">
                   {usuario}
                 </p>
                 <p className="truncate text-[10px] uppercase tracking-[0.14em] text-white/40">
@@ -115,7 +116,6 @@ export default function Sidebar({
             </div>
           </div>
         )}
-
         <nav className="flex-1 overflow-y-auto px-3 py-5">
           <p
             className={`px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/35 ${

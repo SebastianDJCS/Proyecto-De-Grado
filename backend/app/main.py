@@ -113,6 +113,29 @@ def _migraciones_ligeras() -> None:
                     )
             logger.info("Migración: columna 'horas_por_seccion' creada.")
 
+        # Red de seguridad: la duración de una sección va de 1 a 3 horas
+        # académicas. Si algún script dejó un valor fuera de rango, la API
+        # respondería 500 al validar la respuesta, así que se corrige al
+        # arrancar. Es idempotente: solo toca filas realmente inválidas.
+        if dialecto == "postgresql":
+            expresion = "LEAST(3, GREATEST(1, horas_por_seccion))"
+        else:
+            # SQLite: MAX/MIN escalares equivalen a GREATEST/LEAST.
+            expresion = "MIN(3, MAX(1, horas_por_seccion))"
+        with engine.begin() as conn:
+            corregidas = conn.execute(
+                text(
+                    "UPDATE asignaturas "
+                    f"SET horas_por_seccion = {expresion} "
+                    "WHERE horas_por_seccion < 1 OR horas_por_seccion > 3"
+                )
+            ).rowcount
+        if corregidas:
+            logger.warning(
+                f"Migración: {corregidas} asignatura(s) con 'horas_por_seccion' "
+                "fuera del rango 1-3 corregidas."
+            )
+
     if "usuarios" in tablas:
         columnas_usuario = {
             col["name"]: col for col in inspector.get_columns("usuarios")
