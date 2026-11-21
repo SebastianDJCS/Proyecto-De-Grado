@@ -28,6 +28,7 @@ class HorarioDetalleSchema(BaseModel):
     salon_nombre: Optional[str] = None
     dia: str
     bloque_horario: str
+    semestre: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -56,12 +57,14 @@ def _mapear_horario(h: HorarioOptimizado) -> HorarioDetalleSchema:
     codigo_grupo = "N/A"
     tipo_act = getattr(h, "tipo_actividad", "CLASE")
     nombre_asignatura = "Labor Administrativa" if tipo_act == "ADMINISTRATIVA" else "N/A"
+    semestre = None
 
     if h.grupo_proyectado:
         if h.grupo_proyectado.numero_grupo is not None:
             codigo_grupo = str(h.grupo_proyectado.numero_grupo)
         if h.grupo_proyectado.asignatura:
             nombre_asignatura = h.grupo_proyectado.asignatura.nombre
+            semestre = h.grupo_proyectado.asignatura.semestre
 
     return HorarioDetalleSchema(
         id=h.id,
@@ -75,6 +78,7 @@ def _mapear_horario(h: HorarioOptimizado) -> HorarioDetalleSchema:
         salon_nombre=nombre_salon,
         dia=h.dia,
         bloque_horario=h.bloque_horario,
+        semestre=semestre,
     )
 
 

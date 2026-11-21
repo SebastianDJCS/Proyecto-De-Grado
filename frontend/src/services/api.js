@@ -130,12 +130,12 @@ export const descargarMallaPdfArchivo = async (payload, nombreArchivo) => {
   } catch (err) {
     const errorBlob = err.response?.data;
     if (errorBlob?.type?.includes('application/json')) {
-      throw new Error(await leerError(errorBlob));
+      throw new Error(await leerError(errorBlob), { cause: err });
     }
     if (err.response?.status === 401) {
-      throw new Error('Tu sesión expiró. Vuelve a iniciar sesión.');
+      throw new Error('Tu sesión expiró. Vuelve a iniciar sesión.', { cause: err });
     }
-    throw new Error('No se pudo generar el PDF. Intenta de nuevo.');
+    throw new Error('No se pudo generar el PDF. Intenta de nuevo.', { cause: err });
   }
 
   if (blob?.type?.includes('application/json')) {
