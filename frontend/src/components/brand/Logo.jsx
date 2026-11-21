@@ -48,9 +48,7 @@ function BloqueHorizontal({ size, inverse }) {
       <MarcaUN size={size} />
       <div className="min-w-0">
         <p
-          className={`${s.word} font-extrabold leading-none tracking-[-0.035em] ${
-            inverse ? 'text-white' : 'text-ink'
-          }`}
+          className={`${s.word} font-extrabold leading-none tracking-[-0.035em] text-white`}
         >
           UNINÚÑEZ
         </p>

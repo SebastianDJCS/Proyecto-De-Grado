@@ -52,7 +52,7 @@ export default function LoginPage() {
         )}
 
         <div className="relative z-10 flex h-full flex-col justify-between">
-          <div className="w-fit rounded-md bg-white p-2.5">
+          <div className="w-fit rounded-md bg- p-2.5">
             <Logo variant="horizontal" size="lg" />
           </div>
 
@@ -172,7 +172,6 @@ export default function LoginPage() {
 
           <p className="mt-4 text-center text-[11px] leading-relaxed text-faint">
             Regístrate con tu correo, contraseña y semestre actual.
-            Los administradores gestionan docentes, asignaturas y salones.
           </p>
         </div>
       </main>
